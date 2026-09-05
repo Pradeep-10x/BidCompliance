@@ -274,7 +274,7 @@ const columns = columnHelper.columns([
               size="sm"
               id={`${row.original.id}-reviewer`}
             >
-              <SelectValue placeholder="Assign reviewer" />
+              <SelectValue placeholder="Bidder Name" />
             </SelectTrigger>
             <SelectContent align="end">
               <SelectGroup>
@@ -420,7 +420,7 @@ export function DataTable({
             size="sm"
             id="view-selector"
           >
-            <SelectValue placeholder="Select a view" />
+            <SelectValue placeholder="GSTIN Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -739,7 +739,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                 <Label htmlFor="type">Type</Label>
                 <Select defaultValue={item.type}>
                   <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
+                    <SelectValue placeholder="Compilance Score" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -767,7 +767,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                 <Label htmlFor="status">Status</Label>
                 <Select defaultValue={item.status}>
                   <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
+                    <SelectValue placeholder="Verification Depth" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -793,7 +793,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               <Label htmlFor="reviewer">Reviewer</Label>
               <Select defaultValue={item.reviewer}>
                 <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
+                  <SelectValue placeholder="Risk Level" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

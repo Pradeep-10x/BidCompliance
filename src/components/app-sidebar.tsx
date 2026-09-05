@@ -23,7 +23,7 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Bidder Queue",
       url: "#",
       icon: (
         <LayoutDashboardIcon
@@ -31,7 +31,7 @@ const data = {
       ),
     },
     {
-      title: "Lifecycle",
+      title: "Tender Rule Studio",
       url: "#",
       icon: (
         <ListIcon
@@ -39,7 +39,7 @@ const data = {
       ),
     },
     {
-      title: "Analytics",
+      title: "Audit Trail",
       url: "#",
       icon: (
         <ChartBarIcon
@@ -47,7 +47,7 @@ const data = {
       ),
     },
     {
-      title: "Projects",
+      title: "Department Index",
       url: "#",
       icon: (
         <FolderIcon
