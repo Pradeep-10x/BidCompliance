@@ -9,6 +9,8 @@ from .field_extractors.gst import extract_gst_fields
 from .field_extractors.pan import extract_pan_fields
 from .field_extractors.udyam import extract_udyam_fields
 from .field_extractors.mca import extract_mca_fields
+from .field_extractors.bis import extract_bis_fields
+from .field_extractors.dpiit import extract_dpiit_fields
 
 router = APIRouter(prefix="/ml1", tags=["Document Intelligence"])
 
@@ -16,7 +18,11 @@ EXTRACTOR_MAP = {
     "gst_registration_certificate": extract_gst_fields,
     "pan_document": extract_pan_fields,
     "udyam_registration_certificate": extract_udyam_fields,
+    "udyam_msme_registration_certificate": extract_udyam_fields,
     "mca_incorporation_certificate": extract_mca_fields,
+    "mca_incorporation_or_company_document": extract_mca_fields,
+    "bis_certificate_or_licence": extract_bis_fields,
+    "dpiit_startup_recognition_certificate": extract_dpiit_fields,
 }
 
 

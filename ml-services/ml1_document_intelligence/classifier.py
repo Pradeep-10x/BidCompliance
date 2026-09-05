@@ -47,6 +47,30 @@ DOCUMENT_SIGNATURES = {
         r"registrar\s+of\s+companies",
         r"is\s+incorporated",
     ],
+    "bis_certificate_or_licence": [
+        r"bureau\s+of\s+indian\s+standards",
+        r"product\s+certification",
+        r"standard\s+mark",
+        r"isi\s+mark",
+        r"\bbis\b",
+        r"bis[-_\s]*inspired",
+        r"bis[-_\s]*style",
+        r"syn[-_]8?1?bis",
+        r"manufacturing\s+unit",
+        r"is\s+number",
+        r"licence\s+no",
+    ],
+    "dpiit_startup_recognition_certificate": [
+        r"department\s+for\s+promotion\s+of\s+industry",
+        r"startup\s+india",
+        r"startup\s+recognition",
+        r"dpii?f?t?",
+        r"dpii?f?t?[-_\s]*inspired",
+        r"dpii?f?t?[-_\s]*style",
+        r"syn[-_]dpii?f?t?",
+        r"certificate\s+of\s+recognition",
+        r"recognition\s+details",
+    ],
 }
 
 
@@ -56,6 +80,8 @@ def classify_document(ocr_text: str) -> dict:
         return {
             "document_type": "unknown_or_other",
             "confidence": 0.0,
+            "classification_method": "keyword_rule_baseline",
+            "alternatives": [],
             "scores": {k: 0.0 for k in DOCUMENT_SIGNATURES},
         }
 
@@ -72,20 +98,31 @@ def classify_document(ocr_text: str) -> dict:
     best_type = max(matches_count, key=matches_count.get)
     best_matches = matches_count[best_type]
 
-    # Normalize scores: 3+ distinct keyword matches = 0.95+ confidence
+    # Normalize scores: 3+ distinct keyword matches = 1.0 confidence
     scores = {
         k: round(min(1.0, count / 3.0), 2) for k, count in matches_count.items()
     }
+
+    # Build ranked alternatives (excluding best type, only with score > 0)
+    alternatives = [
+        {"document_type": k, "confidence": v}
+        for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        if k != best_type and v > 0.0
+    ]
 
     if best_matches == 0:
         return {
             "document_type": "unknown_or_other",
             "confidence": 0.0,
+            "classification_method": "keyword_rule_baseline",
+            "alternatives": [],
             "scores": scores,
         }
 
     return {
         "document_type": best_type,
         "confidence": scores[best_type],
+        "classification_method": "keyword_rule_baseline",
+        "alternatives": alternatives,
         "scores": scores,
     }
