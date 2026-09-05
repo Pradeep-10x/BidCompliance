@@ -1,0 +1,69 @@
+{
+  "document_id": "SYN-UDYAM-000015",
+  "document_type": "UDYAM",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 82",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "udyam_registration_number",
+    "primary_id_value": "SYN-UDYAM-000015",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "12 Synthetic Industrial Road, Testpur, Fictional Maharashtra, SYN-PIN-801720",
+    "structured": {
+      "line1": "12 Synthetic Industrial Road",
+      "city": "Testpur",
+      "state": "Fictional Maharashtra",
+      "pin": "SYN-PIN-801720"
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "mobile": "SYN-MOBILE-993670",
+    "email": "demo403799@example.invalid",
+    "date_of_incorporation": "2024-08-02",
+    "date_of_commencement": "2024-08-02"
+  },
+  "fields": {
+    "document_id": "SYN-UDYAM-000015",
+    "udyam_registration_number": "SYN-UDYAM-000015",
+    "enterprise_name": "Sample Enterprises 82",
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "line1": "12 Synthetic Industrial Road",
+    "city": "Testpur",
+    "state": "Fictional Maharashtra",
+    "pin": "SYN-PIN-801720",
+    "mobile": "SYN-MOBILE-993670",
+    "email": "demo403799@example.invalid",
+    "date_of_incorporation": "2024-08-02",
+    "date_of_commencement": "2024-08-02",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

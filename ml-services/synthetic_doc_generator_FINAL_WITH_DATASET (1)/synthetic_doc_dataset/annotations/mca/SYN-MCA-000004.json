@@ -1,0 +1,77 @@
+{
+  "document_id": "SYN-MCA-000004",
+  "document_type": "MCA",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Synthetic Systems 11",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "pan_number",
+    "primary_id_value": "SYN-PAN-000004",
+    "secondary_ids": [
+      {
+        "label": "cin_number",
+        "value": "SYN-CIN-000004"
+      },
+      {
+        "label": "tan_number",
+        "value": "SYN-TAN-000004"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": null,
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": [
+      {
+        "label": "incorporation_date",
+        "value": "2026-09-25"
+      }
+    ]
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "incorporation_date_words": "2026-09-25",
+    "tan_number": "SYN-TAN-000004",
+    "place_of_issue": "Demo Nagar",
+    "registrar_name": "Registrar Demo",
+    "registrar_designation": "Registrar",
+    "digital_signature_text": "Digital signature placeholder - synthetic"
+  },
+  "fields": {
+    "document_id": "SYN-MCA-000004",
+    "company_name": "Synthetic Systems 11",
+    "incorporation_date": "2026-09-25",
+    "incorporation_date_words": "2026-09-25",
+    "cin_number": "SYN-CIN-000004",
+    "pan_number": "SYN-PAN-000004",
+    "tan_number": "SYN-TAN-000004",
+    "place_of_issue": "Demo Nagar",
+    "registrar_name": "Registrar Demo",
+    "registrar_designation": "Registrar",
+    "digital_signature_text": "Digital signature placeholder - synthetic",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

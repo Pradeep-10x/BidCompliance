@@ -1,0 +1,70 @@
+{
+  "document_id": "SYN-GST-000006",
+  "document_type": "GST",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": null,
+    "type": "company",
+    "constitution": "Limited Liability Partnership"
+  },
+  "identifiers": {
+    "primary_id_label": "gstin_number",
+    "primary_id_value": "SYN-GST-000006",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "33 Demo Industrial Road, Sample City, Sample State",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2023-12-05",
+    "valid_from": "2023-12-05",
+    "valid_upto": "2026-12-04",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "legal_name": "Synthetic Systems 39",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Limited Liability Partnership",
+    "date_of_liability": null,
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction"
+  },
+  "fields": {
+    "document_id": "SYN-GST-000006",
+    "gstin_number": "SYN-GST-000006",
+    "legal_name": "Synthetic Systems 39",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Limited Liability Partnership",
+    "principal_address": "33 Demo Industrial Road, Sample City, Sample State",
+    "date_of_liability": null,
+    "validity_from": "2023-12-05",
+    "validity_to": "2026-12-04",
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction",
+    "certificate_issue_date": "2023-12-05",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

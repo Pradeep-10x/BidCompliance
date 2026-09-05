@@ -1,0 +1,66 @@
+{
+  "document_id": "SYN-DPIIT-000014",
+  "document_type": "DPIIT",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 98",
+    "type": "company",
+    "constitution": "Partnership"
+  },
+  "identifiers": {
+    "primary_id_label": "certificate_number",
+    "primary_id_value": "SYN-DPIIT-000014",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": null,
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-08-02",
+    "valid_from": null,
+    "valid_upto": "2030-08-01",
+    "other_dates": [
+      {
+        "label": "incorporation_date",
+        "value": "2025-08-02"
+      }
+    ]
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "constitution_type": "Partnership",
+    "industry": "Technology",
+    "sector": "Software Services",
+    "date_of_issue": "2025-08-02",
+    "turnover_condition_text": "Synthetic turnover condition for demonstration only."
+  },
+  "fields": {
+    "document_id": "SYN-DPIIT-000014",
+    "certificate_number": "SYN-DPIIT-000014",
+    "company_name": "Sample Enterprises 98",
+    "constitution_type": "Partnership",
+    "incorporation_date": "2025-08-02",
+    "industry": "Technology",
+    "sector": "Software Services",
+    "date_of_issue": "2025-08-02",
+    "valid_upto": "2030-08-01",
+    "turnover_condition_text": "Synthetic turnover condition for demonstration only.",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

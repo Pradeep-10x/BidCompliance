@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000001",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 22",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000001",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000001"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "72 Demo Industrial Road, Demo Nagar, Test Karnataka",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-03-13",
+    "valid_from": "2025-03-13",
+    "valid_upto": "2027-03-13",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Lighting Products",
+    "product_name": "LED Lamp",
+    "is_number": "SYN-IS-000001",
+    "brand_name": "DemoBrand",
+    "model_name": "Model-DX",
+    "authorized_representative_name": "Synthetic Person 342",
+    "authorized_representative_address": null,
+    "signatory_name": null,
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000001",
+    "reference_number": "SYN-BIS-000001",
+    "issue_date": "2025-03-13",
+    "manufacturing_unit_name": "Sample Enterprises 22",
+    "manufacturing_unit_address": "72 Demo Industrial Road, Demo Nagar, Test Karnataka",
+    "product_category": "Lighting Products",
+    "product_name": "LED Lamp",
+    "is_number": "SYN-IS-000001",
+    "brand_name": "DemoBrand",
+    "model_name": "Model-DX",
+    "factory_address": "41 Demo Industrial Road, Testpur, Demo Pradesh",
+    "licence_number": "SYN-LIC-000001",
+    "valid_from": "2025-03-13",
+    "valid_upto": "2027-03-13",
+    "authorized_representative_name": "Synthetic Person 342",
+    "authorized_representative_address": null,
+    "signatory_name": null,
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

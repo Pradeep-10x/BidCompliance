@@ -1,0 +1,69 @@
+{
+  "document_id": "SYN-UDYAM-000012",
+  "document_type": "UDYAM",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Synthetic Systems 57",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "udyam_registration_number",
+    "primary_id_value": "SYN-UDYAM-000012",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "12 Synthetic Industrial Road, Example Town, Demo Pradesh, SYN-PIN-660321",
+    "structured": {
+      "line1": "12 Synthetic Industrial Road",
+      "city": "Example Town",
+      "state": "Demo Pradesh",
+      "pin": "SYN-PIN-660321"
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "mobile": "SYN-MOBILE-579025",
+    "email": "demo862723@example.invalid",
+    "date_of_incorporation": "2023-03-09",
+    "date_of_commencement": "2023-03-09"
+  },
+  "fields": {
+    "document_id": "SYN-UDYAM-000012",
+    "udyam_registration_number": "SYN-UDYAM-000012",
+    "enterprise_name": "Synthetic Systems 57",
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "line1": "12 Synthetic Industrial Road",
+    "city": "Example Town",
+    "state": "Demo Pradesh",
+    "pin": "SYN-PIN-660321",
+    "mobile": "SYN-MOBILE-579025",
+    "email": "demo862723@example.invalid",
+    "date_of_incorporation": "2023-03-09",
+    "date_of_commencement": "2023-03-09",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

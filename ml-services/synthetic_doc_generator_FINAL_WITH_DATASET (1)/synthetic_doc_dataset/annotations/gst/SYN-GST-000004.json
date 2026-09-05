@@ -1,0 +1,70 @@
+{
+  "document_id": "SYN-GST-000004",
+  "document_type": "GST",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": null,
+    "type": "company",
+    "constitution": "Private Limited"
+  },
+  "identifiers": {
+    "primary_id_label": "gstin_number",
+    "primary_id_value": "SYN-GST-000004",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "58 Demo Industrial Road, Sample City, Demo Pradesh",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-06-24",
+    "valid_from": "2025-06-24",
+    "valid_upto": "2028-06-23",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "legal_name": "Synthetic Systems 46",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Private Limited",
+    "date_of_liability": null,
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction"
+  },
+  "fields": {
+    "document_id": "SYN-GST-000004",
+    "gstin_number": "SYN-GST-000004",
+    "legal_name": "Synthetic Systems 46",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Private Limited",
+    "principal_address": "58 Demo Industrial Road, Sample City, Demo Pradesh",
+    "date_of_liability": null,
+    "validity_from": "2025-06-24",
+    "validity_to": "2028-06-23",
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction",
+    "certificate_issue_date": "2025-06-24",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

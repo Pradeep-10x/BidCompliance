@@ -1,0 +1,57 @@
+{
+  "document_id": "SYN-PAN-000004",
+  "document_type": "PAN",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Synthetic Person 295",
+    "type": "individual",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "pan_number",
+    "primary_id_value": "SYN-PAN-000004",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": null,
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": true,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "father_name": "Synthetic Person 281",
+    "date_of_birth": "1989-05-13",
+    "signature_present": true,
+    "photo_present": true
+  },
+  "fields": {
+    "document_id": "SYN-PAN-000004",
+    "pan_number": "SYN-PAN-000004",
+    "holder_name": "Synthetic Person 295",
+    "father_name": "Synthetic Person 281",
+    "date_of_birth": "1989-05-13",
+    "signature_present": true,
+    "photo_present": true,
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}
