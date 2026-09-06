@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query"
+import { apiFetch } from "@/lib/api"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
@@ -5,45 +7,12 @@ import { SectionCards } from "@/components/section-cards"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
-const tableData = [
-  {
-    id: 1,
-    header: "Project Overview",
-    type: "Executive Summary",
-    status: "Done",
-    target: "100",
-    limit: "200",
-    reviewer: "Eddie Lake",
-  },
-  {
-    id: 2,
-    header: "Technical Approach",
-    type: "Technical Approach",
-    status: "In Progress",
-    target: "75",
-    limit: "100",
-    reviewer: "Jamik Tashpulatov",
-  },
-  {
-    id: 3,
-    header: "System Design",
-    type: "Design",
-    status: "Done",
-    target: "90",
-    limit: "100",
-    reviewer: "Emily Whalen",
-  },
-  {
-    id: 4,
-    header: "Project Capabilities",
-    type: "Capabilities",
-    status: "Not Started",
-    target: "50",
-    limit: "100",
-    reviewer: "Assign reviewer",
-  },
-]
 function App() {
+  const { data: bidders } = useQuery({
+    queryKey: ["bidders"],
+    queryFn: () => apiFetch("/bidders"),
+  })
+
   return (
     <SidebarProvider
       style={
@@ -63,7 +32,7 @@ function App() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              <DataTable data={tableData} />
+              <DataTable data={bidders ?? []} />
             </div>
           </div>
         </div>

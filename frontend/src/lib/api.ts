@@ -6,6 +6,13 @@ let mockRules = [
   { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
   { id: "3", tenderName: "Pipeline Maintenance", requirementType: "Local Content (Class-I)", value: "50%", status: "Draft" },
 ]
+const mockBidders = [
+  { id: "1", name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
+  { id: "2", name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired" },
+  { id: "3", name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
+  { id: "4", name: "Kaveri Engineering Works", gstin: "05ABNTY3290P8ZE", complianceScore: 95, verificationDepth: 91, riskLevel: "Low", status: "Recommended" },
+  { id: "5", name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified" },
+]
 // Mock responses, keyed by "METHOD /path"
 const mockResponses: Record<string, unknown> = {
   "POST /auth/login": { access_token: "mock-token-123", token_type: "bearer" },
@@ -35,6 +42,9 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       if (path === "/rules" && method === "GET") {
     return mockDelay(mockRules)
   }
+  if (path === "/bidders" && method === "GET") {
+  return mockDelay(mockBidders)
+}
   if (path === "/rules" && method === "POST") {
     const body = JSON.parse(options.body as string)
     const newRule = { id: String(Date.now()), status: "Draft", ...body }
