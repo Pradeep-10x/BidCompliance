@@ -47,8 +47,8 @@ const data = {
       ),
     },
     {
-      title: "Department Index",
-      url: "#",
+      title: "Debarment Index",
+      url: "/debarment",
       icon: (
         <FolderIcon
         />

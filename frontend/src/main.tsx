@@ -8,6 +8,7 @@ import './index.css'
 import App from './App.tsx'
 import Login from './pages/login.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
+import DebarmentIndex from "./pages/DebarmentIndex.tsx"
 
 const queryClient = new QueryClient()
 
@@ -16,12 +17,12 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
-          <Routes>
-
-<Route path="/rules" element={<ProtectedRoute><RuleStudio /></ProtectedRoute>} />
-            <Route path="/" element={<Login />} />
-            <Route path="/dashboard" element={<ProtectedRoute><App /></ProtectedRoute>} />
-          </Routes>
+<Routes>
+  <Route path="/rules" element={<ProtectedRoute><RuleStudio /></ProtectedRoute>} />
+  <Route path="/" element={<Login />} />
+  <Route path="/dashboard" element={<ProtectedRoute><App /></ProtectedRoute>} />
+  <Route path="/debarment" element={<ProtectedRoute><DebarmentIndex /></ProtectedRoute>} />
+</Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
