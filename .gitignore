@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+.venv/
+venv/
+ENV/
+*.db
+*.sqlite
+*.sqlite3
+ml-services/data/
+
+# Logs
+logs/
+*.log
+
+# Node
+node_modules/
+dist/
