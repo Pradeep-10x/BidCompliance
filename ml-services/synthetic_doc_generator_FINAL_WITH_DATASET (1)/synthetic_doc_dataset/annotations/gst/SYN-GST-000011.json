@@ -1,0 +1,70 @@
+{
+  "document_id": "SYN-GST-000011",
+  "document_type": "GST",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": null,
+    "type": "company",
+    "constitution": "Private Limited"
+  },
+  "identifiers": {
+    "primary_id_label": "gstin_number",
+    "primary_id_value": "SYN-GST-000011",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "49 Demo Industrial Road, Testpur, Fictional Maharashtra",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2026-05-03",
+    "valid_from": "2026-05-03",
+    "valid_upto": "2029-05-02",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "legal_name": "Demo Labs 79",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Private Limited",
+    "date_of_liability": null,
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction"
+  },
+  "fields": {
+    "document_id": "SYN-GST-000011",
+    "gstin_number": "SYN-GST-000011",
+    "legal_name": "Demo Labs 79",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Private Limited",
+    "principal_address": "49 Demo Industrial Road, Testpur, Fictional Maharashtra",
+    "date_of_liability": null,
+    "validity_from": "2026-05-03",
+    "validity_to": "2029-05-02",
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction",
+    "certificate_issue_date": "2026-05-03",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

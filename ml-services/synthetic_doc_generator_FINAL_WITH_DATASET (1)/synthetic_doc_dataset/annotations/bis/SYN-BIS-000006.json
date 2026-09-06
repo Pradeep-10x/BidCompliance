@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000006",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Test Works 24",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000006",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000006"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "38 Demo Industrial Road, Sample City, Fictional Maharashtra",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-04-16",
+    "valid_from": "2025-04-16",
+    "valid_upto": "2027-04-16",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Consumer Electronics",
+    "product_name": "Mobile Charger",
+    "is_number": "SYN-IS-000006",
+    "brand_name": null,
+    "model_name": "Model-DX",
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": null,
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000006",
+    "reference_number": "SYN-BIS-000006",
+    "issue_date": "2025-04-16",
+    "manufacturing_unit_name": "Test Works 24",
+    "manufacturing_unit_address": "38 Demo Industrial Road, Sample City, Fictional Maharashtra",
+    "product_category": "Consumer Electronics",
+    "product_name": "Mobile Charger",
+    "is_number": "SYN-IS-000006",
+    "brand_name": null,
+    "model_name": "Model-DX",
+    "factory_address": "66 Demo Industrial Road, Testpur, Fictional Maharashtra",
+    "licence_number": "SYN-LIC-000006",
+    "valid_from": "2025-04-16",
+    "valid_upto": "2027-04-16",
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": null,
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

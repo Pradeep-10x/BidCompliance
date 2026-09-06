@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000008",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 37",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000008",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000008"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "39 Demo Industrial Road, Sample City, Fictional Maharashtra",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2024-11-30",
+    "valid_from": "2024-11-30",
+    "valid_upto": "2026-11-30",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Lighting Products",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000008",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "authorized_representative_name": "Synthetic Person 396",
+    "authorized_representative_address": "57 Demo Industrial Road, Example Town, Fictional Maharashtra",
+    "signatory_name": "Officer Demo",
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000008",
+    "reference_number": "SYN-BIS-000008",
+    "issue_date": "2024-11-30",
+    "manufacturing_unit_name": "Sample Enterprises 37",
+    "manufacturing_unit_address": "39 Demo Industrial Road, Sample City, Fictional Maharashtra",
+    "product_category": "Lighting Products",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000008",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "factory_address": "88 Demo Industrial Road, Sample City, Fictional Maharashtra",
+    "licence_number": "SYN-LIC-000008",
+    "valid_from": "2024-11-30",
+    "valid_upto": "2026-11-30",
+    "authorized_representative_name": "Synthetic Person 396",
+    "authorized_representative_address": "57 Demo Industrial Road, Example Town, Fictional Maharashtra",
+    "signatory_name": "Officer Demo",
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

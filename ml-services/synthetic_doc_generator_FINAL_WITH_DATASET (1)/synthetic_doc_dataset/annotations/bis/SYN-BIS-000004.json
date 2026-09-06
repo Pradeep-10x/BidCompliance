@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000004",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 89",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000004",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000004"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "66 Demo Industrial Road, Testpur, Test Karnataka",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2026-01-08",
+    "valid_from": "2026-01-08",
+    "valid_upto": "2028-01-08",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Home Appliances",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000004",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "authorized_representative_name": "Synthetic Person 860",
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000004",
+    "reference_number": "SYN-BIS-000004",
+    "issue_date": "2026-01-08",
+    "manufacturing_unit_name": "Sample Enterprises 89",
+    "manufacturing_unit_address": "66 Demo Industrial Road, Testpur, Test Karnataka",
+    "product_category": "Home Appliances",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000004",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "factory_address": "9 Demo Industrial Road, Sample City, Sample State",
+    "licence_number": "SYN-LIC-000004",
+    "valid_from": "2026-01-08",
+    "valid_upto": "2028-01-08",
+    "authorized_representative_name": "Synthetic Person 860",
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": "Synthetic Officer",
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

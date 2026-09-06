@@ -1,0 +1,70 @@
+{
+  "document_id": "SYN-GST-000007",
+  "document_type": "GST",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": null,
+    "type": "company",
+    "constitution": "Partnership"
+  },
+  "identifiers": {
+    "primary_id_label": "gstin_number",
+    "primary_id_value": "SYN-GST-000007",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "48 Demo Industrial Road, Sample City, Test Karnataka",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-04-05",
+    "valid_from": "2025-04-05",
+    "valid_upto": "2028-04-04",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": "Synthetic Officer"
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "legal_name": "Test Works 60",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Partnership",
+    "date_of_liability": null,
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction"
+  },
+  "fields": {
+    "document_id": "SYN-GST-000007",
+    "gstin_number": "SYN-GST-000007",
+    "legal_name": "Test Works 60",
+    "trade_name": "Demo Trade Name",
+    "constitution_of_business": "Partnership",
+    "principal_address": "48 Demo Industrial Road, Sample City, Test Karnataka",
+    "date_of_liability": null,
+    "validity_from": "2025-04-05",
+    "validity_to": "2028-04-04",
+    "registration_type": "Regular",
+    "approving_authority": "Approving Authority (Fictional)",
+    "officer_name": "Officer Demo",
+    "officer_designation": "Synthetic Officer",
+    "jurisdictional_office": "Demo Jurisdiction",
+    "certificate_issue_date": "2025-04-05",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

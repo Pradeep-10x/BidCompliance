@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000015",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 91",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000015",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000015"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "21 Demo Industrial Road, Sample City, Test Karnataka",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-12-09",
+    "valid_from": "2025-12-09",
+    "valid_upto": "2027-12-09",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Consumer Electronics",
+    "product_name": "Desk Fan",
+    "is_number": "SYN-IS-000015",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": null,
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000015",
+    "reference_number": "SYN-BIS-000015",
+    "issue_date": "2025-12-09",
+    "manufacturing_unit_name": "Sample Enterprises 91",
+    "manufacturing_unit_address": "21 Demo Industrial Road, Sample City, Test Karnataka",
+    "product_category": "Consumer Electronics",
+    "product_name": "Desk Fan",
+    "is_number": "SYN-IS-000015",
+    "brand_name": "DemoBrand",
+    "model_name": null,
+    "factory_address": "29 Demo Industrial Road, Demo Nagar, Fictional Maharashtra",
+    "licence_number": "SYN-LIC-000015",
+    "valid_from": "2025-12-09",
+    "valid_upto": "2027-12-09",
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": null,
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

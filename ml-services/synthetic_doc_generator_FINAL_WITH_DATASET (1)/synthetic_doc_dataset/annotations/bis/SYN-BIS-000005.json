@@ -1,0 +1,88 @@
+{
+  "document_id": "SYN-BIS-000005",
+  "document_type": "BIS",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Fictional Devices 69",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "reference_number",
+    "primary_id_value": "SYN-BIS-000005",
+    "secondary_ids": [
+      {
+        "label": "licence_number",
+        "value": "SYN-LIC-000005"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": "92 Demo Industrial Road, Example Town, Sample State",
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": "2025-05-09",
+    "valid_from": "2025-05-09",
+    "valid_upto": "2027-05-09",
+    "other_dates": []
+  },
+  "signatory": {
+    "name": "Officer Demo",
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "product_category": "Lighting Products",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000005",
+    "brand_name": null,
+    "model_name": null,
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": null,
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ]
+  },
+  "fields": {
+    "document_id": "SYN-BIS-000005",
+    "reference_number": "SYN-BIS-000005",
+    "issue_date": "2025-05-09",
+    "manufacturing_unit_name": "Fictional Devices 69",
+    "manufacturing_unit_address": "92 Demo Industrial Road, Example Town, Sample State",
+    "product_category": "Lighting Products",
+    "product_name": "Smart Watch",
+    "is_number": "SYN-IS-000005",
+    "brand_name": null,
+    "model_name": null,
+    "factory_address": "91 Demo Industrial Road, Demo Nagar, Fictional Maharashtra",
+    "licence_number": "SYN-LIC-000005",
+    "valid_from": "2025-05-09",
+    "valid_upto": "2027-05-09",
+    "authorized_representative_name": null,
+    "authorized_representative_address": null,
+    "signatory_name": "Officer Demo",
+    "signatory_designation": null,
+    "terms_conditions": [
+      "This is a synthetic demo document.",
+      "Not valid for legal or regulatory use.",
+      "Generated for OCR research only."
+    ],
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

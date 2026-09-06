@@ -1,0 +1,77 @@
+{
+  "document_id": "SYN-MCA-000014",
+  "document_type": "MCA",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Demo Labs 62",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "pan_number",
+    "primary_id_value": "SYN-PAN-000014",
+    "secondary_ids": [
+      {
+        "label": "cin_number",
+        "value": "SYN-CIN-000014"
+      },
+      {
+        "label": "tan_number",
+        "value": "SYN-TAN-000014"
+      }
+    ]
+  },
+  "address": {
+    "raw_text": null,
+    "structured": {
+      "line1": null,
+      "city": null,
+      "state": null,
+      "pin": null
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": [
+      {
+        "label": "incorporation_date",
+        "value": "2024-05-21"
+      }
+    ]
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": true,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "incorporation_date_words": "2024-05-21",
+    "tan_number": "SYN-TAN-000014",
+    "place_of_issue": "Demo Nagar",
+    "registrar_name": "Registrar Demo",
+    "registrar_designation": "Registrar",
+    "digital_signature_text": "Digital signature placeholder - synthetic"
+  },
+  "fields": {
+    "document_id": "SYN-MCA-000014",
+    "company_name": "Demo Labs 62",
+    "incorporation_date": "2024-05-21",
+    "incorporation_date_words": "2024-05-21",
+    "cin_number": "SYN-CIN-000014",
+    "pan_number": "SYN-PAN-000014",
+    "tan_number": "SYN-TAN-000014",
+    "place_of_issue": "Demo Nagar",
+    "registrar_name": "Registrar Demo",
+    "registrar_designation": "Registrar",
+    "digital_signature_text": "Digital signature placeholder - synthetic",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}

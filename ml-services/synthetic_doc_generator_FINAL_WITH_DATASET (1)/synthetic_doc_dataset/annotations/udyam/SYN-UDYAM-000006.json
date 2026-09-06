@@ -1,0 +1,69 @@
+{
+  "document_id": "SYN-UDYAM-000006",
+  "document_type": "UDYAM",
+  "issuing_authority": "Fictional Demo Authority",
+  "entity": {
+    "name": "Sample Enterprises 49",
+    "type": "company",
+    "constitution": null
+  },
+  "identifiers": {
+    "primary_id_label": "udyam_registration_number",
+    "primary_id_value": "SYN-UDYAM-000006",
+    "secondary_ids": []
+  },
+  "address": {
+    "raw_text": "12 Synthetic Industrial Road, Demo Nagar, Sample State, SYN-PIN-350613",
+    "structured": {
+      "line1": "12 Synthetic Industrial Road",
+      "city": "Demo Nagar",
+      "state": "Sample State",
+      "pin": "SYN-PIN-350613"
+    }
+  },
+  "dates": {
+    "issue_date": null,
+    "valid_from": null,
+    "valid_upto": null,
+    "other_dates": []
+  },
+  "signatory": {
+    "name": null,
+    "designation": null
+  },
+  "visual_elements": {
+    "has_photo": false,
+    "has_qr_or_barcode": false,
+    "has_signature_block": false,
+    "has_emblem_or_logo": false
+  },
+  "extra_fields": {
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "mobile": "SYN-MOBILE-890919",
+    "email": "demo612335@example.invalid",
+    "date_of_incorporation": "2021-06-09",
+    "date_of_commencement": "2021-06-09"
+  },
+  "fields": {
+    "document_id": "SYN-UDYAM-000006",
+    "udyam_registration_number": "SYN-UDYAM-000006",
+    "enterprise_name": "Sample Enterprises 49",
+    "enterprise_type": "Micro",
+    "major_activity": "Manufacturing",
+    "social_category": "General",
+    "unit_name": "Demo Unit",
+    "line1": "12 Synthetic Industrial Road",
+    "city": "Demo Nagar",
+    "state": "Sample State",
+    "pin": "SYN-PIN-350613",
+    "mobile": "SYN-MOBILE-890919",
+    "email": "demo612335@example.invalid",
+    "date_of_incorporation": "2021-06-09",
+    "date_of_commencement": "2021-06-09",
+    "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+  },
+  "watermark_tag": "SYNTHETIC / DEMO / NOT VALID"
+}
