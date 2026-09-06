@@ -7,6 +7,7 @@ import RuleStudio from './pages/RuleStudio.tsx'
 import './index.css'
 import App from './App.tsx'
 import Login from './pages/login.tsx'
+import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 
 const queryClient = new QueryClient()
 
@@ -17,9 +18,9 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <Routes>
 
-<Route path="/rules" element={<RuleStudio />} />
+<Route path="/rules" element={<ProtectedRoute><RuleStudio /></ProtectedRoute>} />
             <Route path="/" element={<Login />} />
-            <Route path="/dashboard" element={<App />} />
+            <Route path="/dashboard" element={<ProtectedRoute><App /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
