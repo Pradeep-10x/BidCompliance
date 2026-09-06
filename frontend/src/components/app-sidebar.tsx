@@ -24,7 +24,7 @@ const data = {
   navMain: [
     {
       title: "Bidder Queue",
-      url: "#",
+      url: "/dashboard",
       icon: (
         <LayoutDashboardIcon
         />
@@ -32,7 +32,7 @@ const data = {
     },
     {
       title: "Tender Rule Studio",
-      url: "#",
+      url: "/rules",
       icon: (
         <ListIcon
         />

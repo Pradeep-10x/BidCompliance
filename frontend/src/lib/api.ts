@@ -1,6 +1,11 @@
 const BASE_URL = "http://127.0.0.1:8000/api/v1"
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
+let mockRules = [
+  { id: "1", tenderName: "Refinery Equipment Supply", requirementType: "Turnover Threshold", value: "₹50,00,000", status: "Active" },
+  { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
+  { id: "3", tenderName: "Pipeline Maintenance", requirementType: "Local Content (Class-I)", value: "50%", status: "Draft" },
+]
 // Mock responses, keyed by "METHOD /path"
 const mockResponses: Record<string, unknown> = {
   "POST /auth/login": { access_token: "mock-token-123", token_type: "bearer" },
@@ -26,6 +31,21 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const method = (options.method || "GET").toUpperCase()
 
   if (USE_MOCK) {
+
+      if (path === "/rules" && method === "GET") {
+    return mockDelay(mockRules)
+  }
+  if (path === "/rules" && method === "POST") {
+    const body = JSON.parse(options.body as string)
+    const newRule = { id: String(Date.now()), status: "Draft", ...body }
+    mockRules = [...mockRules, newRule]
+    return mockDelay(newRule)
+  }
+  if (path.startsWith("/rules/") && method === "DELETE") {
+    const id = path.split("/")[2]
+    mockRules = mockRules.filter((r) => r.id !== id)
+    return mockDelay({ success: true })
+  }
     const key = `${method} ${path}`
     if (key in mockResponses) {
       return mockDelay(mockResponses[key])
