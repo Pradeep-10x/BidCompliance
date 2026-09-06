@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 from shared.exceptions import MLServiceException
 from ml1_document_intelligence.routes import router as ml1_router
 from ml1_document_intelligence.ocr_service import is_tesseract_available
+from ml2_forensics.routes import router as ml2_router
+from ml2_forensics.forensics_service import PIKEPDF_AVAILABLE
 
 # Configure logging to server console
 logging.basicConfig(
@@ -73,15 +75,17 @@ async def handle_unhandled_exception(request: Request, exc: Exception):
 
 
 app.include_router(ml1_router)
+app.include_router(ml2_router)
 
 
 @app.get("/health")
 def root_health():
     tesseract_ready = is_tesseract_available()
     return {
-        "status": "ok" if tesseract_ready else "degraded",
+        "status": "ok" if (tesseract_ready and PIKEPDF_AVAILABLE) else "degraded",
         "service": "ml-services",
         "ocr_engine_available": tesseract_ready,
+        "forensics_engine_available": PIKEPDF_AVAILABLE,
     }
 
 

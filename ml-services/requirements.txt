@@ -4,3 +4,5 @@ fastapi
 uvicorn
 pytesseract
 python-multipart
+pikepdf>=10.13.0
+pypdf>=6.17.0
