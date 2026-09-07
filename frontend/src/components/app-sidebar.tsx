@@ -40,7 +40,7 @@ const data = {
     },
     {
       title: "Audit Trail",
-      url: "#",
+      url: "/audit",
       icon: (
         <ChartBarIcon
         />

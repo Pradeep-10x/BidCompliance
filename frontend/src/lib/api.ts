@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000/api/v1"
+const BASE_URL = "http://10.227.227.239:8000/api/v1"
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
 let mockRules = [
@@ -12,6 +12,14 @@ const mockBidders = [
   { id: 3, name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
   { id: 4, name: "Kaveri Engineering Works", gstin: "05ABNTY3290P8ZE", complianceScore: 95, verificationDepth: 91, riskLevel: "Low", status: "Recommended" },
   { id: 5, name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified" },
+]
+
+const mockAuditEntries = [
+  { id: 1, timestamp: "2026-09-05T09:12:00Z", actionType: "Verification", description: "GSTIN verified — Alton Plastic Pvt Ltd", ruleVersion: "v1.2", actor: "System", evidenceRef: "ev-001" },
+  { id: 2, timestamp: "2026-09-05T09:14:00Z", actionType: "Verification", description: "PAN cross-check failed — MS Corporation", ruleVersion: "v1.2", actor: "System", evidenceRef: "ev-002" },
+  { id: 3, timestamp: "2026-09-05T10:02:00Z", actionType: "Officer Decision", description: "Clarification requested — MS Corporation", ruleVersion: "v1.2", actor: "Officer R. Sharma", evidenceRef: "ev-002" },
+  { id: 4, timestamp: "2026-09-06T11:30:00Z", actionType: "Officer Decision", description: "Override applied — turnover mismatch waived", ruleVersion: "v1.3", actor: "Officer R. Sharma", evidenceRef: "ev-004" },
+  { id: 5, timestamp: "2026-09-06T14:45:00Z", actionType: "Verification", description: "Debarment check — no match found — Kaveri Engineering Works", ruleVersion: "v1.3", actor: "System", evidenceRef: "ev-005" },
 ]
 
 const mockDebarment = [
@@ -100,6 +108,9 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       if (path === "/rules" && method === "GET") {
     return mockDelay(mockRules)
   }
+  if (path === "/audit" && method === "GET") {
+  return mockDelay(mockAuditEntries)
+}
   if (path === "/bidders" && method === "GET") {
   return mockDelay(mockBidders)
 }
