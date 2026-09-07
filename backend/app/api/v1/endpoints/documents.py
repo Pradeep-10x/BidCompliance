@@ -1,13 +1,23 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.rbac import get_current_active_user
 from app.models.document import Document
 from app.models.user import User
-from app.schemas.document import DocumentCreate, DocumentResponse, DocumentUpdate
+from app.schemas.document import DocumentResponse, DocumentUpdate
 from app.services.document_service import (
     create_document,
     get_bid,
@@ -15,6 +25,14 @@ from app.services.document_service import (
     get_tender,
     list_documents,
     update_document,
+)
+from app.services.storage_service import (
+    EmptyUploadError,
+    StorageError,
+    UploadTooLargeError,
+    generate_object_key,
+    get_storage_service,
+    normalize_filename,
 )
 
 router = APIRouter()
@@ -33,16 +51,79 @@ async def require_bid(
         raise not_found("Bid not found")
 
 
+SUPPORTED_MIME_TYPES = {
+    "application/pdf": b"%PDF-",
+    "image/png": b"\x89PNG\r\n\x1a\n",
+    "image/jpeg": b"\xff\xd8\xff",
+    "image/jpg": b"\xff\xd8\xff",
+}
+
+
+async def validate_upload(file: UploadFile) -> str:
+    mime_type = (file.content_type or "").split(";", 1)[0].lower()
+    signature = SUPPORTED_MIME_TYPES.get(mime_type)
+    if signature is None:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Unsupported document MIME type",
+        )
+    header = await file.read(max(len(value) for value in SUPPORTED_MIME_TYPES.values()))
+    await file.seek(0)
+    if not header.startswith(signature):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file signature does not match its MIME type",
+        )
+    return mime_type
+
+
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def create(
     tender_id: UUID,
     bid_id: UUID,
-    document_in: DocumentCreate,
+    file: UploadFile = File(...),
+    document_type: str = Form(default="GENERAL"),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
+    storage=Depends(get_storage_service),
 ) -> Document:
     await require_bid(db, tender_id, bid_id)
-    return await create_document(db, bid_id, document_in)
+    mime_type = await validate_upload(file)
+    if not document_type.strip() or len(document_type) > 100:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="document_type must contain 1 to 100 characters",
+        )
+    try:
+        stored = await storage.store(
+            file,
+            generate_object_key(file.filename),
+            settings.MAX_UPLOAD_SIZE_BYTES,
+        )
+        return await create_document(
+            db,
+            bid_id,
+            normalize_filename(file.filename),
+            document_type.strip(),
+            mime_type,
+            stored,
+            storage,
+        )
+    except EmptyUploadError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty",
+        )
+    except UploadTooLargeError:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Uploaded file exceeds the maximum size",
+        )
+    except StorageError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Document storage failed",
+        )
 
 
 @router.get("", response_model=list[DocumentResponse])

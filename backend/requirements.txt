@@ -10,3 +10,4 @@ pyjwt[crypto]
 pytest
 pytest-asyncio
 httpx
+python-multipart

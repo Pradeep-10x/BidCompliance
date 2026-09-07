@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.bid import Bid
 from app.models.document import Document
 from app.models.tender import Tender
-from app.schemas.document import DocumentCreate, DocumentUpdate
+from app.schemas.document import DocumentUpdate
+from app.services.storage_service import StorageService, StoredObject
 
 
 async def get_tender(db: AsyncSession, tender_id: UUID) -> Tender | None:
@@ -23,11 +24,30 @@ async def get_bid(
 
 
 async def create_document(
-    db: AsyncSession, bid_id: UUID, document_in: DocumentCreate
+    db: AsyncSession,
+    bid_id: UUID,
+    original_filename: str,
+    document_type: str,
+    mime_type: str | None,
+    stored: StoredObject,
+    storage: StorageService,
 ) -> Document:
-    document = Document(bid_id=bid_id, **document_in.model_dump())
+    document = Document(
+        bid_id=bid_id,
+        original_filename=original_filename,
+        document_type=document_type,
+        content_hash=stored.content_hash,
+        storage_path=stored.key,
+        file_size_bytes=stored.size,
+        mime_type=mime_type,
+    )
     db.add(document)
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        await storage.delete(stored.key)
+        raise
     await db.refresh(document)
     return document
 
