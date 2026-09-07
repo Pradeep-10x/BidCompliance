@@ -6,7 +6,7 @@ let mockRules = [
   { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
   { id: "3", tenderName: "Pipeline Maintenance", requirementType: "Local Content (Class-I)", value: "50%", status: "Draft" },
 ]
-const mockBidders = [
+let mockBidders = [
   { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
   { id: 2, name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired" },
   { id: 3, name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
@@ -113,6 +113,20 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 }
   if (path === "/bidders" && method === "GET") {
   return mockDelay(mockBidders)
+}
+if (path === "/officer/decision" && method === "POST") {
+  const body = JSON.parse(options.body as string)
+  const bidder = mockBidders.find((b) => b.id === body.bidderId)
+  if (bidder) {
+    const statusMap: Record<string, string> = {
+      accept: "Recommended",
+      override: "Conditional",
+      escalate: "ClarificationRequired",
+      disqualify: "Disqualified",
+    }
+    bidder.status = statusMap[body.action] ?? bidder.status
+  }
+  return mockDelay({ success: true, bidderId: body.bidderId, action: body.action })
 }
   if (path === "/rules" && method === "POST") {
     const body = JSON.parse(options.body as string)
