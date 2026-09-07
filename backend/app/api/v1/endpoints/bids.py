@@ -8,6 +8,7 @@ from app.core.rbac import get_current_active_user
 from app.models.bid import Bid
 from app.models.user import User
 from app.schemas.bid import BidCreate, BidResponse, BidUpdate
+from app.schemas.evaluation import RequirementEvaluationResponse
 from app.services.bid_service import (
     DuplicateBidError,
     create_bid,
@@ -16,6 +17,11 @@ from app.services.bid_service import (
     get_tender,
     list_bids,
     update_bid,
+)
+from app.services.evaluation_service import (
+    evaluate_bid_requirements,
+    get_bid_evaluation,
+    list_bid_evaluations,
 )
 
 router = APIRouter()
@@ -100,3 +106,48 @@ async def update(
             status_code=status.HTTP_409_CONFLICT,
             detail="Bidder already has a bid for this tender",
         )
+
+
+@router.post(
+    "/{bid_id}/evaluations",
+    response_model=list[RequirementEvaluationResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def evaluate_bid(
+    tender_id: UUID,
+    bid_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_tender(db, tender_id)
+    return await evaluate_bid_requirements(db, tender_id, bid_id)
+
+
+@router.get(
+    "/{bid_id}/evaluations",
+    response_model=list[RequirementEvaluationResponse],
+)
+async def list_evaluations(
+    tender_id: UUID,
+    bid_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_tender(db, tender_id)
+    return await list_bid_evaluations(db, tender_id, bid_id)
+
+
+@router.get(
+    "/{bid_id}/evaluations/{requirement_id}",
+    response_model=RequirementEvaluationResponse,
+)
+async def get_evaluation(
+    tender_id: UUID,
+    bid_id: UUID,
+    requirement_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_tender(db, tender_id)
+    return await get_bid_evaluation(db, tender_id, bid_id, requirement_id)
+

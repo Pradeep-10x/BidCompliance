@@ -53,7 +53,7 @@ async def cleanup_test_data(db_session: AsyncSession):
     try:
         await db_session.rollback()
         await db_session.execute(
-            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence RESTART IDENTITY CASCADE;")
+            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence, requirement_evaluations RESTART IDENTITY CASCADE;")
         )
         await db_session.commit()
     except Exception:
@@ -62,7 +62,7 @@ async def cleanup_test_data(db_session: AsyncSession):
     try:
         await db_session.rollback()
         await db_session.execute(
-            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence RESTART IDENTITY CASCADE;")
+            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence, requirement_evaluations RESTART IDENTITY CASCADE;")
         )
         await db_session.commit()
     except Exception:

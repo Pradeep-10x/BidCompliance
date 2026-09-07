@@ -7,6 +7,7 @@ from app.models.document import Document, DocumentProcessingStatus
 from app.models.processing_job import ProcessingJob, ProcessingJobStatus, PipelineStage
 from app.models.ml_processing_result import MLProcessingResult
 from app.models.evidence import Evidence
+from app.models.requirement_evaluation import RequirementEvaluation
 
 __all__ = [
     "User",
@@ -24,4 +25,5 @@ __all__ = [
     "PipelineStage",
     "MLProcessingResult",
     "Evidence",
+    "RequirementEvaluation",
 ]
