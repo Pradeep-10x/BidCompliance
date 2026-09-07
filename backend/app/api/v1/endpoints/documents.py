@@ -34,6 +34,12 @@ from app.services.storage_service import (
     get_storage_service,
     normalize_filename,
 )
+from app.core.queue import JobPublisher, get_job_publisher
+from app.schemas.job import ProcessingJobResponse
+from app.services.job_service import (
+    get_job_for_document,
+    list_document_jobs,
+)
 
 router = APIRouter()
 
@@ -86,6 +92,7 @@ async def create(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_active_user),
     storage=Depends(get_storage_service),
+    publisher: JobPublisher = Depends(get_job_publisher),
 ) -> Document:
     await require_bid(db, tender_id, bid_id)
     mime_type = await validate_upload(file)
@@ -100,7 +107,7 @@ async def create(
             generate_object_key(file.filename),
             settings.MAX_UPLOAD_SIZE_BYTES,
         )
-        return await create_document(
+        document = await create_document(
             db,
             bid_id,
             normalize_filename(file.filename),
@@ -109,6 +116,10 @@ async def create(
             stored,
             storage,
         )
+        from app.services.job_service import create_initial_job
+
+        await create_initial_job(db, document.id, publisher)
+        return document
     except EmptyUploadError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -168,3 +179,37 @@ async def update(
     if document is None:
         raise not_found("Document not found")
     return await update_document(db, document, document_in)
+
+
+@router.get("/{document_id}/jobs", response_model=list[ProcessingJobResponse])
+async def list_jobs(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+) -> list:
+    await require_bid(db, tender_id, bid_id)
+    if await get_document(db, bid_id, document_id) is None:
+        raise not_found("Document not found")
+    return await list_document_jobs(db, tender_id, bid_id, document_id)
+
+
+@router.get(
+    "/{document_id}/jobs/{job_id}", response_model=ProcessingJobResponse
+)
+async def get_job_status(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_bid(db, tender_id, bid_id)
+    job = await get_job_for_document(
+        db, tender_id, bid_id, document_id, job_id
+    )
+    if job is None:
+        raise not_found("Processing job not found")
+    return job

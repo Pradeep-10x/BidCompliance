@@ -4,6 +4,7 @@ from app.models.requirement import Requirement
 from app.models.bidder import Bidder
 from app.models.bid import Bid, BidStatus
 from app.models.document import Document, DocumentProcessingStatus
+from app.models.processing_job import ProcessingJob, ProcessingJobStatus, PipelineStage
 
 __all__ = [
     "User",
@@ -16,4 +17,7 @@ __all__ = [
     "BidStatus",
     "Document",
     "DocumentProcessingStatus",
+    "ProcessingJob",
+    "ProcessingJobStatus",
+    "PipelineStage",
 ]

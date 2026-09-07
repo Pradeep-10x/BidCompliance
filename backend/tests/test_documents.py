@@ -5,6 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.core.config import settings
+from app.core.queue import get_job_publisher
 from app.main import app
 from app.services.storage_service import LocalFileStorage, StorageError, get_storage_service
 from tests.test_bids import create_bid, create_bidder, create_tender
@@ -15,8 +16,23 @@ from tests.test_tenders import auth_headers
 def document_storage(tmp_path):
     storage = LocalFileStorage(tmp_path)
     app.dependency_overrides[get_storage_service] = lambda: storage
+    app.dependency_overrides[get_job_publisher] = lambda: RecordingPublisher()
     yield storage
     app.dependency_overrides.pop(get_storage_service, None)
+    app.dependency_overrides.pop(get_job_publisher, None)
+
+
+class RecordingPublisher:
+    def __init__(self, error: Exception | None = None):
+        self.error = error
+        self.published: list[tuple[str, dict]] = []
+
+    async def publish(self, job_id, payload):
+        if self.error:
+            from app.core.queue import QueueSubmissionError
+
+            raise QueueSubmissionError(str(self.error))
+        self.published.append((str(job_id), payload))
 
 
 def upload_payload(
