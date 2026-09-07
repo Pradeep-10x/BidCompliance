@@ -5,6 +5,7 @@ from app.models.bidder import Bidder
 from app.models.bid import Bid, BidStatus
 from app.models.document import Document, DocumentProcessingStatus
 from app.models.processing_job import ProcessingJob, ProcessingJobStatus, PipelineStage
+from app.models.ml_processing_result import MLProcessingResult
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "ProcessingJob",
     "ProcessingJobStatus",
     "PipelineStage",
+    "MLProcessingResult",
 ]
