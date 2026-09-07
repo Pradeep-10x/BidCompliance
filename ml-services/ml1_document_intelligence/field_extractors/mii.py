@@ -43,9 +43,9 @@ def extract_mii_fields(ocr_text: str) -> List[Dict[str, Any]]:
     origin_match = re.search(r"(?:country of origin)[:\s]+([A-Za-z]+)", ocr_text, re.IGNORECASE)
     fields.append({
         "field": "country_of_origin",
-        "value": origin_match.group(1).strip() if origin_match else "India",
-        "confidence": 0.80,
-        "extraction_method": "regex_anchor_with_default",
+        "value": origin_match.group(1).strip() if origin_match else None,
+        "confidence": 0.80 if origin_match else 0.0,
+        "extraction_method": "regex_anchor" if origin_match else "not_found",
     })
 
     # 4. GFR Rule 175 / 151 compliance flag
