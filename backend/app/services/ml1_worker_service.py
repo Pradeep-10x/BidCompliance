@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -9,6 +10,7 @@ from app.models.document import Document
 from app.models.ml_processing_result import MLProcessingResult
 from app.models.processing_job import ProcessingJob, ProcessingJobStatus
 from app.schemas.ml1 import ML1Request, ML1Response
+from app.services.evidence_service import ingest_evidence_from_ml_result
 from app.services.ml1_client import ML1IntegrationError
 
 
@@ -51,6 +53,7 @@ async def persist_result(
     result = existing_result.scalar_one_or_none()
     if result is None:
         result = MLProcessingResult(
+            id=uuid.uuid4(),
             job_id=job.id,
             document_id=document.id,
             bid_id=bid.id,
@@ -63,6 +66,7 @@ async def persist_result(
             errors=response.errors,
         )
         db.add(result)
+        await db.flush()
     return result
 
 
@@ -93,7 +97,8 @@ async def execute_classification_job(
         validate_response(response, job, document, bid)
         if response.status != "success":
             raise ML1InvalidResponseError("ML-1 returned a failed result")
-        await persist_result(db, job, document, bid, response)
+        ml_result = await persist_result(db, job, document, bid, response)
+        await ingest_evidence_from_ml_result(db, ml_result, document)
     except ML1IntegrationError as exc:
         job.status = ProcessingJobStatus.FAILED
         job.error_message = str(exc)

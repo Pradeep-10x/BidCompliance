@@ -40,6 +40,11 @@ from app.services.job_service import (
     get_job_for_document,
     list_document_jobs,
 )
+from app.schemas.evidence import EvidenceResponse
+from app.services.evidence_service import (
+    get_document_evidence,
+    list_document_evidence,
+)
 
 router = APIRouter()
 
@@ -213,3 +218,38 @@ async def get_job_status(
     if job is None:
         raise not_found("Processing job not found")
     return job
+
+
+@router.get("/{document_id}/evidence", response_model=list[EvidenceResponse])
+async def list_evidence(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+) -> list:
+    await require_bid(db, tender_id, bid_id)
+    if await get_document(db, bid_id, document_id) is None:
+        raise not_found("Document not found")
+    return await list_document_evidence(db, document_id)
+
+
+@router.get(
+    "/{document_id}/evidence/{evidence_id}", response_model=EvidenceResponse
+)
+async def get_evidence(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    evidence_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_bid(db, tender_id, bid_id)
+    if await get_document(db, bid_id, document_id) is None:
+        raise not_found("Document not found")
+    evidence = await get_document_evidence(db, document_id, evidence_id)
+    if evidence is None:
+        raise not_found("Evidence not found")
+    return evidence
+

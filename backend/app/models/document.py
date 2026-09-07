@@ -11,6 +11,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.bid import Bid
+    from app.models.evidence import Evidence
     from app.models.processing_job import ProcessingJob
 
 
@@ -63,4 +64,7 @@ class Document(Base):
     bid: Mapped["Bid"] = relationship("Bid", back_populates="documents")
     processing_jobs: Mapped[list["ProcessingJob"]] = relationship(
         "ProcessingJob", back_populates="document", cascade="all, delete-orphan"
+    )
+    evidence: Mapped[list["Evidence"]] = relationship(
+        "Evidence", back_populates="document", cascade="all, delete-orphan"
     )
