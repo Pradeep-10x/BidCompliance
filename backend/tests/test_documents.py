@@ -319,6 +319,24 @@ async def test_generated_storage_path_exists_in_temporary_storage(
 
 
 @pytest.mark.asyncio
+async def test_upload_skips_job_creation_when_queue_is_disabled(
+    client: AsyncClient, monkeypatch
+):
+    headers = await auth_headers(client)
+    tender, _, bid = await document_context(client, headers)
+    monkeypatch.setattr(settings, "PROCESSING_QUEUE_ENABLED", False)
+
+    document = await create_document(client, headers, tender["id"], bid["id"])
+    jobs = await client.get(
+        document_path(tender["id"], bid["id"], document["id"]) + "/jobs",
+        headers=headers,
+    )
+
+    assert jobs.status_code == 200
+    assert jobs.json() == []
+
+
+@pytest.mark.asyncio
 async def test_processing_status_failed_is_rejected_and_remains_pending(
     client: AsyncClient,
 ):

@@ -16,9 +16,11 @@ tender PDF upload/version
 
 ## Start the stack
 
-For deployment, follow [`DEPLOYMENT.md`](../DEPLOYMENT.md). Its primary EC2
-path uses native systemd services, Nginx, PostgreSQL, Redis, and Tesseract, so
-Docker is not required. Docker Compose remains an optional local fallback.
+For the selected managed deployment, follow
+[`RENDER_VERCEL_S3_DEPLOYMENT.md`](../RENDER_VERCEL_S3_DEPLOYMENT.md). It uses
+Render for FastAPI, PostgreSQL, and Tesseract, Vercel for the frontend, and a
+private AWS S3 bucket for documents. The EC2 and Docker Compose paths remain
+fallbacks in [`DEPLOYMENT.md`](../DEPLOYMENT.md).
 
 Services:
 
@@ -29,14 +31,13 @@ Services:
 - PostgreSQL: `localhost:5432`
 - Redis: `localhost:6379`
 
-In the native deployment, documents are stored under
-`/var/lib/pramaan/documents` and shared with ML-1. The normal upload endpoint
-submits processing work to Redis and a Celery worker. The explicit `/upload`
-then `/{document_id}/process` route remains available for a predictable,
-synchronous SIH stage demonstration.
+Local development stores documents on disk. The managed deployment stores both
+tender and bidder documents in S3 and sends bidder-document bytes to ML-1 over
+HTTPS. Set `PROCESSING_QUEUE_ENABLED=false` to use the explicit `/upload` then
+`/{document_id}/process` route without Redis or a Celery worker.
 
-See [`DEPLOYMENT.md`](../DEPLOYMENT.md) for the complete EC2 and Vercel setup,
-service inventory, environment variables, HTTPS guidance, and update procedure.
+See the managed deployment guide for the complete S3, Render, and Vercel setup,
+service inventory, environment variables, and end-to-end check.
 
 ## Run locally without Docker
 
@@ -123,8 +124,9 @@ Only `CONFIRMED` and `ADDED_MANUALLY` requirements are evaluated.
   tender LLM worker can replace it behind the same candidate contract.
 - ML-1 extracts text directly from digital PDFs and OCRs raster images and
   image-only/scanned PDFs with Tesseract.
-- S3/MinIO-backed storage, official registry adapters, signed URLs, and production
-  queue retry/dead-letter operations remain hardening milestones.
+- S3-backed storage is implemented for private tender and bidder documents.
+  Direct-browser signed uploads, official registry adapters, and production queue
+  retry/dead-letter operations remain hardening milestones.
 
 ## Tests
 

@@ -1,9 +1,8 @@
-import hashlib
 import io
 import mimetypes
 import uuid
 from decimal import Decimal
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
@@ -15,6 +14,11 @@ from app.core.config import settings
 from app.models.requirement import Requirement
 from app.models.tender_document import TenderDocument
 from app.services.audit_service import append_audit_event
+from app.services.storage_service import (
+    StorageError,
+    StoredObjectNotFoundError,
+    get_storage_service,
+)
 
 REQUIREMENT_PATTERNS = (
     {
@@ -162,20 +166,24 @@ async def store_tender_document(
     )
     version = int(version_result.scalar_one()) + 1
     document_id = uuid.uuid4()
-    relative_path = (
-        Path("tenders") / str(tender_id) / f"v{version}_{document_id}_{filename}"
+    object_key = str(
+        PurePosixPath("tenders")
+        / str(tender_id)
+        / f"v{version}_{document_id}_{filename}"
     )
-    target = (Path(settings.STORAGE_ROOT) / relative_path).resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(content)
+    storage = get_storage_service(settings.STORAGE_ROOT)
+    try:
+        stored = await storage.store_bytes(content, object_key, max_bytes)
+    except StorageError as exc:
+        raise HTTPException(status_code=500, detail="Tender storage failed") from exc
 
     document = TenderDocument(
         id=document_id,
         tender_id=tender_id,
         version=version,
         original_filename=filename,
-        content_hash=hashlib.sha256(content).hexdigest(),
-        storage_path=str(relative_path),
+        content_hash=stored.content_hash,
+        storage_path=stored.key,
         file_size_bytes=len(content),
         mime_type="application/pdf",
         processing_status="UPLOADED",
@@ -192,7 +200,15 @@ async def store_tender_document(
             "sha256": document.content_hash,
         },
     )
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        try:
+            await storage.delete(object_key)
+        except StorageError:
+            pass
+        raise
     await db.refresh(document)
     return document
 
@@ -223,13 +239,17 @@ async def analyze_latest_tender(
             status_code=422, detail="Upload a tender PDF before analysis"
         )
 
-    path = (Path(settings.STORAGE_ROOT) / document.storage_path).resolve()
-    if not path.exists():
+    storage = get_storage_service(settings.STORAGE_ROOT)
+    try:
+        content = await storage.read(document.storage_path)
+    except StoredObjectNotFoundError as exc:
         raise HTTPException(
             status_code=404, detail="Stored tender bytes were not found"
-        )
+        ) from exc
+    except StorageError as exc:
+        raise HTTPException(status_code=503, detail="Tender storage is unavailable") from exc
     try:
-        reader = PdfReader(io.BytesIO(path.read_bytes()))
+        reader = PdfReader(io.BytesIO(content))
         page_texts = [(page.extract_text() or "").strip() for page in reader.pages]
     except Exception as exc:
         document.processing_status = "FAILED"

@@ -1,3 +1,4 @@
+import io
 from uuid import UUID
 
 from fastapi import (
@@ -10,7 +11,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -31,6 +32,7 @@ from app.services.document_service import (
 from app.services.storage_service import (
     EmptyUploadError,
     StorageError,
+    StoredObjectNotFoundError,
     UploadTooLargeError,
     generate_object_key,
     get_storage_service,
@@ -50,7 +52,6 @@ from app.services.evidence_service import (
 from app.services.processing_service import (
     list_document_facts,
     process_document_with_ml,
-    resolve_document_path,
     store_uploaded_document,
 )
 
@@ -152,9 +153,10 @@ async def create(
             stored,
             storage,
         )
-        from app.services.job_service import create_initial_job
+        if settings.PROCESSING_QUEUE_ENABLED:
+            from app.services.job_service import create_initial_job
 
-        await create_initial_job(db, document.id, publisher)
+            await create_initial_job(db, document.id, publisher)
         return document
     except EmptyUploadError:
         raise HTTPException(
@@ -245,7 +247,7 @@ async def get_facts(
     return await list_document_facts(db, document.id)
 
 
-@router.get("/{document_id}/download", response_class=FileResponse)
+@router.get("/{document_id}/download", response_class=StreamingResponse)
 async def download_document(
     tender_id: UUID,
     bid_id: UUID,
@@ -257,10 +259,25 @@ async def download_document(
     document = await get_document(db, bid_id, document_id)
     if document is None:
         raise not_found("Document not found")
-    path = resolve_document_path(document)
-    if not path.exists():
+    storage = get_storage_service(settings.STORAGE_ROOT)
+    try:
+        content = await storage.read(document.storage_path)
+    except StoredObjectNotFoundError:
         raise not_found("Stored document bytes were not found")
-    return FileResponse(path, media_type=document.mime_type, filename=document.original_filename)
+    except StorageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Document storage is unavailable",
+        ) from exc
+    safe_filename = normalize_filename(document.original_filename).replace('"', "")
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type=document.mime_type or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
+            "Content-Length": str(len(content)),
+        },
+    )
 
 
 @router.patch("/{document_id}", response_model=DocumentResponse)

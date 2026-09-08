@@ -33,5 +33,12 @@ class CeleryJobPublisher:
             raise QueueSubmissionError from exc
 
 
+class DisabledJobPublisher:
+    async def publish(self, job_id: UUID, payload: dict) -> None:
+        raise QueueSubmissionError("The asynchronous processing queue is disabled")
+
+
 def get_job_publisher() -> JobPublisher:
+    if not settings.PROCESSING_QUEUE_ENABLED:
+        return DisabledJobPublisher()
     return CeleryJobPublisher()

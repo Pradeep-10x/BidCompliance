@@ -1,5 +1,9 @@
 # PRAMAAN deployment
 
+For the selected managed prototype architecture (Render + Vercel + private AWS
+S3), follow [RENDER_VERCEL_S3_DEPLOYMENT.md](RENDER_VERCEL_S3_DEPLOYMENT.md).
+The native EC2 instructions below remain available as a performance fallback.
+
 The recommended SIH prototype layout does not require Docker:
 
 ```text

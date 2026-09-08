@@ -3,7 +3,7 @@ import json
 import mimetypes
 import uuid
 from decimal import Decimal
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from uuid import UUID
 
 import httpx
@@ -15,6 +15,11 @@ from app.core.config import settings
 from app.models.compliance import ExtractedFact
 from app.models.document import Document, DocumentProcessingStatus
 from app.services.audit_service import append_audit_event
+from app.services.storage_service import (
+    StorageError,
+    StoredObjectNotFoundError,
+    get_storage_service,
+)
 
 ALLOWED_SIGNATURES = {
     "application/pdf": lambda value: value.startswith(b"%PDF"),
@@ -41,14 +46,6 @@ def _detect_content_type(filename: str, supplied: str | None, content: bytes) ->
             detail="Only valid PDF, PNG, and JPEG documents are accepted",
         )
     return candidate
-
-
-def resolve_document_path(document: Document) -> Path:
-    root = Path(settings.STORAGE_ROOT).resolve()
-    target = (root / document.storage_path).resolve()
-    if root != target and root not in target.parents:
-        raise HTTPException(status_code=500, detail="Invalid document storage path")
-    return target
 
 
 async def store_uploaded_document(
@@ -83,10 +80,17 @@ async def store_uploaded_document(
         )
 
     document_id = uuid.uuid4()
-    relative_path = Path(str(tender_id)) / str(bid_id) / f"{document_id}_{filename}"
-    target = (Path(settings.STORAGE_ROOT) / relative_path).resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(content)
+    object_key = str(
+        PurePosixPath("documents")
+        / str(tender_id)
+        / str(bid_id)
+        / f"{document_id}_{filename}"
+    )
+    storage = get_storage_service(settings.STORAGE_ROOT)
+    try:
+        await storage.store_bytes(content, object_key, max_bytes)
+    except StorageError as exc:
+        raise HTTPException(status_code=500, detail="Document storage failed") from exc
 
     document = Document(
         id=document_id,
@@ -94,7 +98,7 @@ async def store_uploaded_document(
         original_filename=filename,
         document_type="UNCLASSIFIED",
         content_hash=content_hash,
-        storage_path=str(relative_path),
+        storage_path=object_key,
         processing_status=DocumentProcessingStatus.UPLOADED,
         file_size_bytes=len(content),
         mime_type=mime_type,
@@ -112,7 +116,15 @@ async def store_uploaded_document(
             "sha256": content_hash,
         },
     )
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        try:
+            await storage.delete(object_key)
+        except StorageError:
+            pass
+        raise
     await db.refresh(document)
     return document
 
@@ -124,11 +136,15 @@ async def process_document_with_ml(
     tender_id: UUID,
     actor_id: UUID,
 ) -> tuple[list[ExtractedFact], float | None, list[str]]:
-    path = resolve_document_path(document)
-    if not path.exists():
+    storage = get_storage_service(settings.STORAGE_ROOT)
+    try:
+        content = await storage.read(document.storage_path)
+    except StoredObjectNotFoundError as exc:
         raise HTTPException(
             status_code=404, detail="Stored document bytes were not found"
-        )
+        ) from exc
+    except StorageError as exc:
+        raise HTTPException(status_code=503, detail="Document storage is unavailable") from exc
 
     document.processing_status = DocumentProcessingStatus.PROCESSING
     await db.commit()
@@ -137,13 +153,16 @@ async def process_document_with_ml(
         async with httpx.AsyncClient(
             timeout=settings.ML_REQUEST_TIMEOUT_SECONDS
         ) as client:
-            with path.open("rb") as source:
-                response = await client.post(
-                    f"{settings.ML_SERVICE_URL.rstrip('/')}/ml1/process/upload",
-                    files={
-                        "file": (document.original_filename, source, document.mime_type)
-                    },
-                )
+            headers = {}
+            if settings.ML_SHARED_SECRET:
+                headers["X-ML-Service-Key"] = settings.ML_SHARED_SECRET
+            response = await client.post(
+                f"{settings.ML_SERVICE_URL.rstrip('/')}/ml1/process/upload",
+                files={
+                    "file": (document.original_filename, content, document.mime_type)
+                },
+                headers=headers,
+            )
             response.raise_for_status()
             result = response.json()
     except (httpx.HTTPError, ValueError) as exc:

@@ -34,8 +34,13 @@ class ML1Client:
         )
         try:
             try:
+                headers = {}
+                if settings.ML_SHARED_SECRET:
+                    headers["X-ML-Service-Key"] = settings.ML_SHARED_SECRET
                 response = await client.post(
-                    "/ml1/document-intelligence", json=request.model_dump(mode="json")
+                    "/ml1/document-intelligence",
+                    json=request.model_dump(mode="json"),
+                    headers=headers,
                 )
                 response.raise_for_status()
             except (httpx.HTTPError, httpx.TimeoutException) as exc:

@@ -56,6 +56,8 @@ class FakeMLResponse:
 
 
 class FakeMLClient:
+    last_headers: dict[str, str] = {}
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -66,6 +68,7 @@ class FakeMLClient:
         return False
 
     async def post(self, *args, **kwargs):
+        self.__class__.last_headers = kwargs.get("headers", {})
         return FakeMLResponse()
 
 
@@ -77,6 +80,7 @@ async def test_upload_process_verify_assess_decide_and_audit(
     from app.services import processing_service
 
     monkeypatch.setattr(settings, "STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setattr(settings, "ML_SHARED_SECRET", "test-ml-shared-secret")
     monkeypatch.setattr(processing_service.httpx, "AsyncClient", FakeMLClient)
     headers = await auth_headers(client)
 
@@ -148,6 +152,16 @@ async def test_upload_process_verify_assess_decide_and_audit(
     assert processed.status_code == 200, processed.text
     assert processed.json()["processing_status"] == "READY"
     assert len(processed.json()["facts"]) == 2
+    assert FakeMLClient.last_headers == {
+        "X-ML-Service-Key": "test-ml-shared-secret"
+    }
+
+    downloaded = await client.get(
+        f"/api/v1/tenders/{tender['id']}/bids/{bid['id']}/documents/{document['id']}/download",
+        headers=headers,
+    )
+    assert downloaded.status_code == 200
+    assert downloaded.content == b"\x89PNG\r\n\x1a\nsynthetic-demo"
 
     verification = await client.post(
         f"/api/v1/tenders/{tender['id']}/bids/{bid['id']}/verifications/run",

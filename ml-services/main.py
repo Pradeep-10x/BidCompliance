@@ -1,4 +1,6 @@
 import logging
+import os
+import secrets
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -30,6 +32,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def require_internal_service_key(request: Request, call_next):
+    """Protect ML processing routes when a shared deployment secret is set."""
+    configured_secret = os.getenv("ML_SHARED_SECRET", "").strip()
+    if configured_secret and request.url.path.startswith(("/ml1/", "/ml2/")):
+        provided_secret = request.headers.get("X-ML-Service-Key", "")
+        if not secrets.compare_digest(provided_secret, configured_secret):
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "success": False,
+                    "error_code": "INVALID_SERVICE_KEY",
+                    "message": "A valid ML service key is required.",
+                    "details": None,
+                },
+            )
+    return await call_next(request)
 
 
 @app.exception_handler(MLServiceException)

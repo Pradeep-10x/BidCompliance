@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -30,10 +32,13 @@ class Settings(BaseSettings):
     STORAGE_ACCESS_KEY: str | None = None
     STORAGE_SECRET_KEY: str | None = None
     STORAGE_BUCKET: str = "documents"
+    STORAGE_REGION: str = "ap-south-1"
+    STORAGE_SERVER_SIDE_ENCRYPTION: str | None = "AES256"
     STORAGE_SECURE: bool = False
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+    PROCESSING_QUEUE_ENABLED: bool = True
     PROCESSING_JOB_MAX_ATTEMPTS: int = 3
     ML1_BASE_URL: str = "http://localhost:8001"
     ML1_CONNECT_TIMEOUT_SECONDS: float = 5.0
@@ -45,6 +50,7 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 25
     ML_SERVICE_URL: str = "http://localhost:8001"
     ML_REQUEST_TIMEOUT_SECONDS: int = 120
+    ML_SHARED_SECRET: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -68,16 +74,22 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        user = quote(self.POSTGRES_USER, safe="")
+        password = quote(self.POSTGRES_PASSWORD, safe="")
+        database = quote(self.POSTGRES_DB, safe="")
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql+asyncpg://{user}:{password}"
+            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{database}"
         )
 
     @property
     def TEST_DATABASE_URL(self) -> str:
+        user = quote(self.POSTGRES_USER, safe="")
+        password = quote(self.POSTGRES_PASSWORD, safe="")
+        database = quote(self.POSTGRES_DB_TEST, safe="")
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB_TEST}"
+            f"postgresql+asyncpg://{user}:{password}"
+            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{database}"
         )
 
     @property
