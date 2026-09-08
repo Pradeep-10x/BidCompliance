@@ -1,4 +1,10 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+DEVELOPMENT_SECRET_KEY = (
+    "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+)
 
 
 class Settings(BaseSettings):
@@ -12,9 +18,11 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "sih_project"
     POSTGRES_DB_TEST: str = "sih_project_test"
 
-    SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    SECRET_KEY: str = DEVELOPMENT_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    TRUSTED_HOSTS: str = "*"
 
     STORAGE_BACKEND: str = "local"
     STORAGE_LOCAL_ROOT: str = "storage"
@@ -44,6 +52,20 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if self.ENVIRONMENT.lower() != "production":
+            return self
+        if (
+            self.SECRET_KEY == DEVELOPMENT_SECRET_KEY
+            or self.SECRET_KEY.startswith("replace_")
+            or len(self.SECRET_KEY) < 32
+        ):
+            raise ValueError("Set a unique SECRET_KEY of at least 32 characters")
+        if self.POSTGRES_PASSWORD.startswith("replace_"):
+            raise ValueError("Replace the example POSTGRES_PASSWORD before deployment")
+        return self
+
     @property
     def DATABASE_URL(self) -> str:
         return (
@@ -57,6 +79,14 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB_TEST}"
         )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [value.strip() for value in self.CORS_ORIGINS.split(",") if value.strip()]
+
+    @property
+    def trusted_hosts(self) -> list[str]:
+        return [value.strip() for value in self.TRUSTED_HOSTS.split(",") if value.strip()]
 
 
 settings = Settings()

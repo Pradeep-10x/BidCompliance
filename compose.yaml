@@ -1,124 +1,159 @@
+name: ${COMPOSE_PROJECT_NAME:-pramaan}
+
+x-backend-environment: &backend-environment
+  PROJECT_NAME: ${PROJECT_NAME:-PRAMAAN}
+  ENVIRONMENT: ${ENVIRONMENT:-production}
+  POSTGRES_SERVER: ${POSTGRES_SERVER:-postgres}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+  POSTGRES_USER: ${POSTGRES_USER:-pramaan}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  POSTGRES_DB: ${POSTGRES_DB:-pramaan}
+  SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+  ALGORITHM: HS256
+  ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+  TRUSTED_HOSTS: ${TRUSTED_HOSTS:-localhost,127.0.0.1}
+  STORAGE_BACKEND: local
+  STORAGE_LOCAL_ROOT: /data/documents
+  STORAGE_ROOT: /data/documents
+  MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:-26214400}
+  MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-25}
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+  CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+  PROCESSING_JOB_MAX_ATTEMPTS: ${PROCESSING_JOB_MAX_ATTEMPTS:-3}
+  ML1_BASE_URL: ${ML1_BASE_URL:-http://ml-services:8001}
+  ML1_CONNECT_TIMEOUT_SECONDS: ${ML1_CONNECT_TIMEOUT_SECONDS:-5}
+  ML1_READ_TIMEOUT_SECONDS: ${ML1_READ_TIMEOUT_SECONDS:-120}
+  ML1_TOTAL_TIMEOUT_SECONDS: ${ML1_TOTAL_TIMEOUT_SECONDS:-125}
+  ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-services:8001}
+  ML_REQUEST_TIMEOUT_SECONDS: ${ML_REQUEST_TIMEOUT_SECONDS:-120}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pramaan_dev
-      POSTGRES_DB: sih_project
+      POSTGRES_USER: ${POSTGRES_USER:-pramaan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-pramaan}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d sih_project"]
-      interval: 3s
-      timeout: 3s
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
       retries: 20
     ports:
-      - "5432:5432"
+      - "${BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT_HOST:-5432}:5432"
     volumes:
       - pramaan_postgres:/var/lib/postgresql/data
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 3s
-      timeout: 3s
+      interval: 5s
+      timeout: 5s
       retries: 20
     ports:
-      - "6379:6379"
-
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: pramaan
-      MINIO_ROOT_PASSWORD: pramaan_demo_secret
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT_HOST:-6379}:6379"
     volumes:
-      - pramaan_minio:/data
-
-  backend:
-    build: ./backend
-    environment:
-      PROJECT_NAME: PRAMAAN
-      ENVIRONMENT: development
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pramaan_dev
-      POSTGRES_DB: sih_project
-      POSTGRES_DB_TEST: sih_project_test
-      SECRET_KEY: local-demo-secret-change-before-deployment-123456789
-      STORAGE_BACKEND: local
-      STORAGE_LOCAL_ROOT: /data/documents
-      MAX_UPLOAD_SIZE_BYTES: 26214400
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      ML1_BASE_URL: http://ml-services:8001
-      ML1_CONNECT_TIMEOUT_SECONDS: 5
-      ML1_READ_TIMEOUT_SECONDS: 120
-      ML1_TOTAL_TIMEOUT_SECONDS: 125
-      STORAGE_ROOT: /data/documents
-      MAX_UPLOAD_SIZE_MB: 25
-      ML_SERVICE_URL: http://ml-services:8001
-      ML_REQUEST_TIMEOUT_SECONDS: 120
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      ml-services:
-        condition: service_healthy
-    ports:
-      - "8000:8000"
-    volumes:
-      - pramaan_documents:/data/documents
-
-  worker:
-    build: ./backend
-    command: celery -A app.celery_app:celery_app worker --loglevel=INFO
-    environment:
-      PROJECT_NAME: PRAMAAN
-      ENVIRONMENT: development
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pramaan_dev
-      POSTGRES_DB: sih_project
-      SECRET_KEY: local-demo-secret-change-before-deployment-123456789
-      STORAGE_BACKEND: local
-      STORAGE_LOCAL_ROOT: /data/documents
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      ML1_BASE_URL: http://ml-services:8001
-      ML1_CONNECT_TIMEOUT_SECONDS: 5
-      ML1_READ_TIMEOUT_SECONDS: 120
-      ML1_TOTAL_TIMEOUT_SECONDS: 125
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      ml-services:
-        condition: service_healthy
-    volumes:
-      - pramaan_documents:/data/documents
+      - pramaan_redis:/data
+    logging: *default-logging
 
   ml-services:
-    build: ./ml-services
+    build:
+      context: ./ml-services
+    restart: unless-stopped
+    init: true
     environment:
       ML_DOCUMENT_ROOT: /data/documents
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 12
     ports:
-      - "8001:8001"
+      - "${BIND_ADDRESS:-127.0.0.1}:${ML_PORT_HOST:-8001}:8001"
     volumes:
       - pramaan_documents:/data/documents:ro
+    logging: *default-logging
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    init: true
+    environment: *backend-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-services:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 12
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${BACKEND_PORT_HOST:-8000}:8000"
+    volumes:
+      - pramaan_documents:/data/documents
+    logging: *default-logging
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    init: true
+    command:
+      - celery
+      - -A
+      - app.celery_app:celery_app
+      - worker
+      - --loglevel=${CELERY_LOG_LEVEL:-INFO}
+      - --concurrency=${CELERY_CONCURRENCY:-2}
+    environment: *backend-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-services:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    volumes:
+      - pramaan_documents:/data/documents
+    stop_grace_period: 30s
+    logging: *default-logging
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_USE_MOCK: ${VITE_USE_MOCK:-true}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    logging: *default-logging
 
 volumes:
   pramaan_postgres:
-  pramaan_minio:
+  pramaan_redis:
   pramaan_documents:

@@ -16,26 +16,27 @@ tender PDF upload/version
 
 ## Start the stack
 
-From the repository root:
-
-```bash
-docker compose up --build
-```
+For deployment, follow [`DEPLOYMENT.md`](../DEPLOYMENT.md). Its primary EC2
+path uses native systemd services, Nginx, PostgreSQL, Redis, and Tesseract, so
+Docker is not required. Docker Compose remains an optional local fallback.
 
 Services:
 
+- Frontend: `http://localhost`
 - Backend API and Swagger: `http://localhost:8000/docs`
 - Backend readiness: `http://localhost:8000/ready`
 - ML service: `http://localhost:8001/health`
 - PostgreSQL: `localhost:5432`
 - Redis: `localhost:6379`
-- MinIO API/console: `localhost:9000` / `localhost:9001`
 
-Documents are stored in the Docker volume mounted at `/data/documents`, shared
-read-only with ML-1. The normal upload endpoint submits processing work to Redis
-and a Celery worker. The explicit `/upload` then `/{document_id}/process` route
-remains available for a predictable, synchronous SIH stage demonstration. MinIO
-is provisioned as the next object-storage boundary but is not used yet.
+In the native deployment, documents are stored under
+`/var/lib/pramaan/documents` and shared with ML-1. The normal upload endpoint
+submits processing work to Redis and a Celery worker. The explicit `/upload`
+then `/{document_id}/process` route remains available for a predictable,
+synchronous SIH stage demonstration.
+
+See [`DEPLOYMENT.md`](../DEPLOYMENT.md) for the complete EC2 and Vercel setup,
+service inventory, environment variables, HTTPS guidance, and update procedure.
 
 ## Run locally without Docker
 
@@ -122,7 +123,7 @@ Only `CONFIRMED` and `ADDED_MANUALLY` requirements are evaluated.
   tender LLM worker can replace it behind the same candidate contract.
 - ML-1 extracts text directly from digital PDFs and OCRs raster images and
   image-only/scanned PDFs with Tesseract.
-- MinIO-backed storage, official registry adapters, signed URLs, and production
+- S3/MinIO-backed storage, official registry adapters, signed URLs, and production
   queue retry/dead-letter operations remain hardening milestones.
 
 ## Tests

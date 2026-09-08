@@ -1,0 +1,23 @@
+[Unit]
+Description=PRAMAAN FastAPI backend
+After=network-online.target postgresql.service redis-server.service pramaan-ml.service
+Wants=network-online.target
+Requires=postgresql.service redis-server.service pramaan-ml.service
+
+[Service]
+Type=simple
+User=pramaan
+Group=pramaan
+WorkingDirectory=/opt/pramaan/backend
+EnvironmentFile=/etc/pramaan/backend.env
+ExecStartPre=/opt/pramaan/backend/.venv/bin/alembic upgrade head
+ExecStart=/opt/pramaan/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=180
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

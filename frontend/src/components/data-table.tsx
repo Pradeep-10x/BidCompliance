@@ -41,7 +41,7 @@ import {
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button as UiButton } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
@@ -81,7 +81,6 @@ import {
   EllipsisVerticalIcon,
   Columns3Icon,
   ChevronDownIcon,
-  PlusIcon,
   ChevronsLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -124,7 +123,7 @@ function DragHandle({ id }: { id: number }) {
   })
 
   return (
-    <Button
+    <UiButton
       {...attributes}
       {...listeners}
       variant="ghost"
@@ -133,7 +132,7 @@ function DragHandle({ id }: { id: number }) {
     >
       <GripVerticalIcon className="size-3 text-muted-foreground" />
       <span className="sr-only">Drag to reorder</span>
-    </Button>
+    </UiButton>
   )
 }
 
@@ -155,14 +154,14 @@ function RowActions({ bidderId }: { bidderId: number }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <UiButton
           variant="ghost"
           className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
           size="icon"
         >
           <EllipsisVerticalIcon />
           <span className="sr-only">Open menu</span>
-        </Button>
+        </UiButton>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-40">
@@ -472,11 +471,11 @@ export function DataTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <UiButton variant="outline" size="sm">
                 <Columns3Icon data-icon="inline-start" />
                 Columns
                 <ChevronDownIcon data-icon="inline-end" />
-              </Button>
+              </UiButton>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
@@ -507,12 +506,6 @@ export function DataTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" size="sm">
-            <PlusIcon />
-            <span className="hidden lg:inline">
-              Add Section
-            </span>
-          </Button>
         </div>
       </div>
 
@@ -630,7 +623,7 @@ export function DataTable({
             </div>
 
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
+              <UiButton
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
@@ -640,9 +633,9 @@ export function DataTable({
                   Go to first page
                 </span>
                 <ChevronsLeftIcon />
-              </Button>
+              </UiButton>
 
-              <Button
+              <UiButton
                 variant="outline"
                 className="size-8"
                 size="icon"
@@ -653,9 +646,9 @@ export function DataTable({
                   Go to previous page
                 </span>
                 <ChevronLeftIcon />
-              </Button>
+              </UiButton>
 
-              <Button
+              <UiButton
                 variant="outline"
                 className="size-8"
                 size="icon"
@@ -666,9 +659,9 @@ export function DataTable({
                   Go to next page
                 </span>
                 <ChevronRightIcon />
-              </Button>
+              </UiButton>
 
-              <Button
+              <UiButton
                 variant="outline"
                 className="hidden size-8 lg:flex"
                 size="icon"
@@ -683,7 +676,7 @@ export function DataTable({
                   Go to last page
                 </span>
                 <ChevronsRightIcon />
-              </Button>
+              </UiButton>
             </div>
           </div>
         </div>

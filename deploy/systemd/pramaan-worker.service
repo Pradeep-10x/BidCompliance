@@ -1,0 +1,23 @@
+[Unit]
+Description=PRAMAAN Celery processing worker
+After=network-online.target postgresql.service redis-server.service pramaan-ml.service pramaan-backend.service
+Requires=postgresql.service redis-server.service pramaan-ml.service pramaan-backend.service
+
+[Service]
+Type=simple
+User=pramaan
+Group=pramaan
+WorkingDirectory=/opt/pramaan/backend
+EnvironmentFile=/etc/pramaan/backend.env
+Environment=CELERY_LOG_LEVEL=INFO
+Environment=CELERY_CONCURRENCY=2
+ExecStart=/opt/pramaan/backend/.venv/bin/celery -A app.celery_app:celery_app worker --loglevel=${CELERY_LOG_LEVEL} --concurrency=${CELERY_CONCURRENCY}
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=60
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -16,6 +16,9 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="text-base font-medium">Documents</h1>
+        <Button className="ml-auto" variant="outline" size="sm" onClick={handleLogout}>
+          Log out
+        </Button>
       </div>
     </header>
   )

@@ -1,4 +1,4 @@
-const BASE_URL = "http://10.227.227.239:8000/api/v1"
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "")
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
 
@@ -7,7 +7,7 @@ let mockRules = [
   { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
   { id: "3", tenderName: "Pipeline Maintenance", requirementType: "Local Content (Class-I)", value: "50%", status: "Draft" },
 ]
-let mockBidders = [
+const mockBidders = [
   { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
   { id: 2, name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired" },
   { id: 3, name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
@@ -239,13 +239,16 @@ if (path === "/officer/decision" && method === "POST") {
   }
 
   const token = localStorage.getItem("access_token")
+  const headers = new Headers(options.headers)
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json")
+  }
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`)
+  }
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    headers,
   })
   if (!res.ok) {
     const error = await res.json().catch(() => ({}))

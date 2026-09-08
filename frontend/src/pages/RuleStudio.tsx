@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/api"
-import { Button } from "@/components/ui/button"
+import { Button as UiButton } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  Form,
+  Form as FormProvider,
   FormControl,
   FormField,
   FormItem,
@@ -80,14 +80,15 @@ export default function RuleStudio() {
         <h1 className="text-2xl font-semibold">Tender Rule Studio</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>+ New Rule</Button>
+            <UiButton>+ New Rule</UiButton>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Rule</DialogTitle>
             </DialogHeader>
-            <Form {...form}>
+            <FormProvider {...form}>
               <form
+                noValidate
                 onSubmit={form.handleSubmit((values) => createRule.mutate(values))}
                 className="space-y-4"
               >
@@ -130,11 +131,11 @@ export default function RuleStudio() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={createRule.isPending}>
+                <UiButton type="submit" className="w-full" disabled={createRule.isPending}>
                   {createRule.isPending ? "Saving..." : "Save Rule"}
-                </Button>
+                </UiButton>
               </form>
-            </Form>
+            </FormProvider>
           </DialogContent>
         </Dialog>
       </div>
@@ -168,13 +169,13 @@ export default function RuleStudio() {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <Button
+                <UiButton
                   variant="ghost"
                   size="sm"
                   onClick={() => deleteRule.mutate(rule.id)}
                 >
                   Delete
-                </Button>
+                </UiButton>
               </TableCell>
             </TableRow>
           ))}
