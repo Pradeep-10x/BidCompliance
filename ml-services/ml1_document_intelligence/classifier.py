@@ -1,4 +1,22 @@
+"""
+Document Classification — Keyword/Pattern-Based Baseline Classifier.
+
+Classifies bidder documents into the taxonomy required by the PRD using
+deterministic pattern matching on OCR text. Each document type has a curated
+set of Indian government procurement-specific patterns.
+
+Classification method: keyword_rule_baseline
+Confidence model:      count / total_patterns  (no more count/3 ceiling)
+Minimum threshold:     >= 2 pattern matches required to assign a type
+"""
+
 import re
+
+# ─────────────────────────────────────────────────────────────────────
+# Document Signature Patterns — Indian Government Procurement Documents
+# ─────────────────────────────────────────────────────────────────────
+# Each pattern list contains ONLY real-world patterns that appear in
+# genuine Indian government documents. No synthetic/test patterns.
 
 DOCUMENT_SIGNATURES = {
     "gst_registration_certificate": [
@@ -7,10 +25,11 @@ DOCUMENT_SIGNATURES = {
         r"form\s+gst\s+reg",
         r"principal\s+place\s+of\s+business",
         r"tax\s+registration",
-        r"gst[-_\s]*inspired",
-        r"gst[-_\s]*style",
-        r"@stin",
-        r"syn[-_]gst",
+        r"central\s+goods\s+and\s+services\s+tax",
+        r"state\s+goods\s+and\s+services\s+tax",
+        r"certificate\s+of\s+registration",
+        r"trade\s+name",
+        r"legal\s+name",
     ],
     "pan_document": [
         r"income\s+tax\s+department",
@@ -18,10 +37,10 @@ DOCUMENT_SIGNATURES = {
         r"govt\.?\s+of\s+india",
         r"\bpan\b",
         r"identity\s+card",
-        r"pan[-_\s]*inspired",
-        r"pan[-_\s]*style",
-        r"syn[-_]pan",
         r"cardholder",
+        r"date\s+of\s+birth",
+        r"father['']?s?\s+name",
+        r"signature",
     ],
     "udyam_registration_certificate": [
         r"udyam\s+registration",
@@ -30,10 +49,10 @@ DOCUMENT_SIGNATURES = {
         r"\budyam\b",
         r"type\s+of\s+enterprise",
         r"enterprise\s+registration",
-        r"udyam[-_\s]*inspired",
-        r"udyam[-_\s]*style",
-        r"syn[-_]udyam",
         r"\bmsme\b",
+        r"major\s+activity",
+        r"nic\s+code",
+        r"date\s+of\s+(?:incorporation|commencement)",
     ],
     "mca_incorporation_certificate": [
         r"certificate\s+of\s+incorporation",
@@ -41,11 +60,11 @@ DOCUMENT_SIGNATURES = {
         r"corporate\s+identity\s+number",
         r"companies\s+act",
         r"\bcin\b",
-        r"mca[-_\s]*inspired",
-        r"mca[-_\s]*style",
-        r"syn[-_]mca",
         r"registrar\s+of\s+companies",
-        r"is\s+incorporated",
+        r"is\s+(?:hereby\s+)?incorporated",
+        r"authorized\s+capital",
+        r"paid[\s-]?up\s+capital",
+        r"registered\s+office",
     ],
     "bis_certificate_or_licence": [
         r"bureau\s+of\s+indian\s+standards",
@@ -53,23 +72,22 @@ DOCUMENT_SIGNATURES = {
         r"standard\s+mark",
         r"isi\s+mark",
         r"\bbis\b",
-        r"bis[-_\s]*inspired",
-        r"bis[-_\s]*style",
-        r"syn[-_]8?1?bis",
         r"manufacturing\s+unit",
         r"is\s+number",
         r"licence\s+no",
+        r"bis\s+care",
+        r"conformity\s+assessment",
     ],
     "dpiit_startup_recognition_certificate": [
         r"department\s+for\s+promotion\s+of\s+industry",
         r"startup\s+india",
         r"startup\s+recognition",
-        r"dpii?f?t?",
-        r"dpii?f?t?[-_\s]*inspired",
-        r"dpii?f?t?[-_\s]*style",
-        r"syn[-_]dpii?f?t?",
+        r"\bdpiit\b",
         r"certificate\s+of\s+recognition",
         r"recognition\s+details",
+        r"recognition\s+number",
+        r"inter[\s-]?ministerial\s+board",
+        r"eligible\s+(?:entity|startup)",
     ],
     "ca_turnover_certificate": [
         r"chartered\s+accountant",
@@ -106,7 +124,7 @@ DOCUMENT_SIGNATURES = {
         r"percentage\s+of\s+local\s+content",
     ],
     "bidder_legal_financial_standing": [
-        r"bidder\s+legal\s+&\s+financial\s+standing",
+        r"bidder\s+legal\s+\&\s+financial\s+standing",
         r"not\s+under\s+liquidation",
         r"court\s+receivership",
         r"bankrupt",
@@ -117,19 +135,31 @@ DOCUMENT_SIGNATURES = {
         r"rescinded/abandoned\s+any\s+contract",
     ],
     "debarment_declaration": [
-        r"debarment,\s+suspension,\s+ineligibility",
-        r"voluntary\s+exclusion",
-        r"executive\s+order\s+12549",
-        r"sba\s+form\s+1624",
-        r"declaration\s+of\s+blacklisting",
+        # Indian-specific debarment and holiday-listing patterns
+        r"declaration\s+of\s+(?:non[\s-]?)?blacklisting",
         r"holiday\s+listing",
         r"non[-_\s]*blacklisting",
+        r"debarment",
+        r"(?:cppp|gem|government\s+e[\s-]?marketplace)",
+        r"e[\s-]?procurement\s+portal",
+        r"banned\s+(?:bidder|firm|vendor)",
+        r"self[\s-]?declaration",
+        r"not\s+(?:been\s+)?(?:debarred|blacklisted|holiday[\s-]?listed)",
     ],
 }
 
+# Minimum number of pattern matches required to classify a document.
+# Prevents false classifications from accidental keyword hits.
+MIN_MATCH_THRESHOLD = 2
+
 
 def classify_document(ocr_text: str) -> dict:
-    """Classifies a document based on signature pattern presence in its OCR text."""
+    """Classifies a document based on signature pattern presence in its OCR text.
+
+    Returns:
+        dict with document_type, confidence, classification_method,
+        alternatives and per-type scores.
+    """
     if not ocr_text or not isinstance(ocr_text, str):
         return {
             "document_type": "unknown_or_other",
@@ -152,10 +182,12 @@ def classify_document(ocr_text: str) -> dict:
     best_type = max(matches_count, key=matches_count.get)
     best_matches = matches_count[best_type]
 
-    # Normalize scores: 3+ distinct keyword matches = 1.0 confidence
-    scores = {
-        k: round(min(1.0, count / 3.0), 2) for k, count in matches_count.items()
-    }
+    # Confidence = matches / total patterns for that document type
+    # This gives a meaningful ratio instead of the old count/3 ceiling
+    scores = {}
+    for doc_type, count in matches_count.items():
+        total_patterns = len(DOCUMENT_SIGNATURES[doc_type])
+        scores[doc_type] = round(min(1.0, count / max(total_patterns, 1)), 2)
 
     # Build ranked alternatives (excluding best type, only with score > 0)
     alternatives = [
@@ -164,12 +196,13 @@ def classify_document(ocr_text: str) -> dict:
         if k != best_type and v > 0.0
     ]
 
-    if best_matches == 0:
+    # Require minimum match threshold to prevent false classifications
+    if best_matches < MIN_MATCH_THRESHOLD:
         return {
             "document_type": "unknown_or_other",
             "confidence": 0.0,
             "classification_method": "keyword_rule_baseline",
-            "alternatives": [],
+            "alternatives": alternatives if best_matches > 0 else [],
             "scores": scores,
         }
 

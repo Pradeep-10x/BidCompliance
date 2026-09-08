@@ -50,11 +50,19 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_test_data(db_session: AsyncSession):
+    try:
+        await db_session.rollback()
+        await db_session.execute(
+            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence, requirement_evaluations RESTART IDENTITY CASCADE;")
+        )
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()
     yield
     try:
         await db_session.rollback()
         await db_session.execute(
-            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents RESTART IDENTITY CASCADE;")
+            text("TRUNCATE TABLE users, tenders, requirements, bidders, bids, documents, evidence, requirement_evaluations RESTART IDENTITY CASCADE;")
         )
         await db_session.commit()
     except Exception:

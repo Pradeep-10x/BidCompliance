@@ -14,13 +14,39 @@ from .exceptions import (
 )
 
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp", ".webp"}
-DEFAULT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024  # 15 MB
+ALLOWED_PDF_EXTENSIONS = {".pdf"}
+ALLOWED_DOCUMENT_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS | ALLOWED_PDF_EXTENSIONS
+DEFAULT_MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB (PDFs can be larger than images)
+
+PDF_MAGIC_BYTES = b"%PDF-"
+
+
+def _is_pdf(path_or_bytes, ext: str = "") -> bool:
+    """Check if a file is a PDF by extension or magic bytes."""
+    if ext.lower() in ALLOWED_PDF_EXTENSIONS:
+        return True
+    if isinstance(path_or_bytes, bytes):
+        return path_or_bytes[:5] == PDF_MAGIC_BYTES
+    return False
+
+
+def _validate_pdf_bytes(file_bytes: bytes, filename: str = "document") -> None:
+    """Basic PDF integrity check — verifies magic header and %%EOF trailer."""
+    if not file_bytes[:5] == PDF_MAGIC_BYTES:
+        raise CorruptedDocumentError(
+            f"File '{filename}' has .pdf extension but does not start with %PDF- magic bytes."
+        )
+    # Check for at least one %%EOF marker (basic structural integrity)
+    if b"%%EOF" not in file_bytes:
+        raise CorruptedDocumentError(
+            f"PDF file '{filename}' is missing %%EOF trailer — file may be truncated or corrupted."
+        )
 
 
 def validate_image_path(image_path: str) -> Path:
     """
     Validates that a local file path points to an existing, readable,
-    and uncorrupted image file.
+    and uncorrupted document file (image or PDF).
 
     Raises domain exceptions if validation fails.
     """
@@ -42,10 +68,26 @@ def validate_image_path(image_path: str) -> Path:
         raise EmptyDocumentError(str(path))
 
     ext = path.suffix.lower()
-    if ext not in ALLOWED_IMAGE_EXTENSIONS:
-        raise InvalidDocumentFormatError(ext or "[no extension]", sorted(list(ALLOWED_IMAGE_EXTENSIONS)))
+    if ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+        raise InvalidDocumentFormatError(ext or "[no extension]", sorted(list(ALLOWED_DOCUMENT_EXTENSIONS)))
 
-    # Verify image integrity with PIL
+    # PDF: validate magic bytes and structure instead of PIL
+    if ext in ALLOWED_PDF_EXTENSIONS:
+        try:
+            with open(path, "rb") as f:
+                header = f.read(1024)
+            _validate_pdf_bytes(header + b"%%EOF", path.name)  # header check only
+            # Full check: read enough to find %%EOF
+            with open(path, "rb") as f:
+                content = f.read()
+            _validate_pdf_bytes(content, path.name)
+        except CorruptedDocumentError:
+            raise
+        except Exception as e:
+            raise CorruptedDocumentError(f"Error reading PDF file '{path.name}': {str(e)}")
+        return path
+
+    # Image: verify integrity with PIL
     try:
         with Image.open(path) as img:
             img.verify()
@@ -64,7 +106,7 @@ def validate_image_bytes(
 ) -> None:
     """
     Validates raw uploaded bytes: checks size, non-emptiness, extension (if given),
-    and validates header integrity with PIL.
+    and validates header integrity (PIL for images, magic-byte check for PDFs).
     """
     if not image_bytes or len(image_bytes) == 0:
         raise EmptyDocumentError(filename or "upload_stream")
@@ -72,12 +114,19 @@ def validate_image_bytes(
     if len(image_bytes) > max_bytes:
         raise FileTooLargeError(len(image_bytes), max_bytes)
 
+    ext = ""
     if filename:
         path = Path(filename)
         ext = path.suffix.lower()
-        if ext and ext not in ALLOWED_IMAGE_EXTENSIONS:
-            raise InvalidDocumentFormatError(ext, sorted(list(ALLOWED_IMAGE_EXTENSIONS)))
+        if ext and ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise InvalidDocumentFormatError(ext, sorted(list(ALLOWED_DOCUMENT_EXTENSIONS)))
 
+    # PDF validation path
+    if _is_pdf(image_bytes, ext):
+        _validate_pdf_bytes(image_bytes, filename or "uploaded_stream")
+        return
+
+    # Image validation path
     try:
         with Image.open(BytesIO(image_bytes)) as img:
             img.verify()

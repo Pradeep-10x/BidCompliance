@@ -239,12 +239,28 @@ def inspect_pdf_forensics(file_bytes: bytes, filename: str = "document.pdf") -> 
                             sig_info["signature_type"] = sub_filter or "adbe.pkcs7"
                             if sig_time:
                                 sig_info["signing_time"] = sig_time.isoformat()
-                            sig_info["intact"] = True
-                            sig_info["trusted"] = "requires_crl_verification"
-                            sig_info["post_signing_modifications"] = False
+                            # NOTE: Cryptographic signature verification requires pyHanko
+                            # or equivalent PKCS#7 validation. We only extract metadata here.
+                            sig_info["intact"] = None  # Cannot verify without cryptographic validation
+                            sig_info["trusted"] = "metadata_only_not_cryptographically_verified"
+                            sig_info["post_signing_modifications"] = None  # Requires byte-range analysis
+                            sig_info["verification_note"] = (
+                                "Signature metadata extracted. Cryptographic integrity and "
+                                "post-signing modification checks require pyHanko or a "
+                                "PKCS#7 validation library."
+                            )
                             break
                 except Exception:
                     continue
+
+    # 4. Incremental Update Detection (multiple %%EOF markers)
+    eof_count = file_bytes.count(b"%%EOF")
+    if eof_count > 1:
+        anomaly_flags.append(
+            f"Document contains {eof_count} %%EOF markers, indicating "
+            f"{eof_count - 1} incremental update(s). Content may have been "
+            f"modified after initial creation or signing."
+        )
 
     pdf.close()
 

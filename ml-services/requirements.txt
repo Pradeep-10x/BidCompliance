@@ -1,8 +1,20 @@
-Faker>=37.0.0
-Pillow>=11.0.0
+# ─── Core Framework ───
 fastapi
 uvicorn
-pytesseract
 python-multipart
+
+# ─── Document Processing ───
+numpy>=1.26.0
+Pillow>=11.0.0
+PyMuPDF>=1.24.0
+pytesseract
+opencv-python-headless>=4.9.0
+pdf2image>=1.17.0
 pikepdf>=10.13.0
 pypdf>=6.17.0
+
+# ─── Entity Resolution & Matching ───
+rapidfuzz>=3.6.0
+
+# ─── Data Ingestion (used by synthetic generator / bulk loader) ───
+Faker>=37.0.0

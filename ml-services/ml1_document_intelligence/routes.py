@@ -10,6 +10,7 @@ from .ocr_service import (
     is_tesseract_available,
     run_ocr_multi,
     extract_word_data_multi,
+    find_phrase_box,
 )
 from .classifier import classify_document
 from .field_extractors.gst import extract_gst_fields
@@ -24,6 +25,9 @@ from .field_extractors.mii import extract_mii_fields
 from .field_extractors.standing import extract_standing_fields
 
 router = APIRouter(prefix="/ml1", tags=["Document Intelligence"])
+
+# Current extractor version — increment when extraction logic changes
+EXTRACTOR_VERSION = "1.0.0"
 
 EXTRACTOR_MAP = {
     "gst_registration_certificate": extract_gst_fields,
@@ -50,7 +54,13 @@ def _build_pipeline_result(
     word_data: Optional[list[dict]] = None,
     document_id: Optional[str] = None,
 ) -> dict:
-    """Run classification and extraction on OCR pages, producing a unified schema output."""
+    """Run classification and extraction on OCR pages.
+
+    Produces PRD §5.2 aligned ExtractedFact schema with:
+        - field, raw_value, normalized_value, confidence
+        - page_number, bbox (wired from word_data via find_phrase_box)
+        - extraction_method, extractor_version, evidence_id, document_id
+    """
     concatenated_ocr = "\n".join(ocr_pages)
     doc_id = document_id or f"doc_{uuid.uuid4().hex[:8]}"
 
@@ -60,60 +70,48 @@ def _build_pipeline_result(
 
     raw_fields = extractor(concatenated_ocr) if extractor else []
 
+    # Build PRD-aligned ExtractedFact list
     unified_fields: list[dict] = []
     for f in raw_fields:
+        # Handle both old (field_name/field_value) and new (field/value) schemas
         field_name = f.get("field") or f.get("field_name")
-        val = f.get("value") if "value" in f else f.get("field_value")
+        raw_val = f.get("value") if "value" in f else f.get("field_value")
         conf = f.get("confidence", 0.0)
+        method = f.get("extraction_method", "unknown")
+
+        # Wire bounding box provenance from word_data
+        bbox_info = None
+        page_number = f.get("page")
+        if word_data and raw_val and isinstance(raw_val, str) and len(raw_val) > 2:
+            phrase_result = find_phrase_box(word_data, raw_val)
+            if phrase_result:
+                bbox_info = phrase_result["bbox"]
+                page_number = phrase_result["page"]
+
         unified_fields.append({
+            # PRD §5.2 ExtractedFact schema
             "field": field_name,
-            "value": val,
+            "raw_value": raw_val,
+            "normalized_value": f.get("value_normalized") or raw_val,
             "confidence": conf,
-            "page": f.get("page"),
-            "bounding_box": f.get("bounding_box"),
-            "value_normalized": f.get("value_normalized"),
-            "extraction_method": f.get("extraction_method", "ocr"),
-            "source_text": f.get("source_text"),
+            "page_number": page_number,
+            "bbox": bbox_info,
+            "extraction_method": method,
+            "extractor_version": EXTRACTOR_VERSION,
             "evidence_id": f.get("evidence_id") or f"ev_{uuid.uuid4().hex[:8]}",
             "document_id": doc_id,
         })
 
-    existing_fields = {field["field"] for field in unified_fields if field.get("field")}
-    if "address" not in existing_fields:
-        unified_fields.append({
-            "field": "address",
-            "value": None,
-            "confidence": 0.0,
-            "page": None,
-            "bounding_box": None,
-            "value_normalized": None,
-            "extraction_method": "ocr",
-            "source_text": None,
-            "evidence_id": f"ev_{uuid.uuid4().hex[:8]}",
-            "document_id": doc_id,
-        })
-    if "company_address" not in existing_fields:
-        unified_fields.append({
-            "field": "company_address",
-            "value": None,
-            "confidence": 0.0,
-            "page": None,
-            "bounding_box": None,
-            "value_normalized": None,
-            "extraction_method": "ocr",
-            "source_text": None,
-            "evidence_id": f"ev_{uuid.uuid4().hex[:8]}",
-            "document_id": doc_id,
-        })
-
     return {
+        "document_id": doc_id,
         "document_classification": classification,
         "fields": unified_fields,
+        "extractor_version": EXTRACTOR_VERSION,
         "ocr_metadata": {
+            "page_count": len(ocr_pages),
             "character_count": sum(len(p) for p in ocr_pages),
             "word_count": sum(len(p.split()) for p in ocr_pages),
-            "concatenated_ocr": concatenated_ocr,
-            "pagewise_ocr": ocr_pages,
+            "word_data_available": word_data is not None and len(word_data) > 0,
         },
     }
 

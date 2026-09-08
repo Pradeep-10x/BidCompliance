@@ -6,17 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.models.document import DocumentProcessingStatus
 
 
-class DocumentCreate(BaseModel):
-    original_filename: str = Field(min_length=1, max_length=255)
-    document_type: str = Field(min_length=1, max_length=100)
-    content_hash: str = Field(pattern=r"^[0-9a-fA-F]{64}$")
-    storage_path: str = Field(min_length=1, max_length=512)
-    file_size_bytes: int | None = Field(default=None, ge=0)
-    mime_type: str | None = Field(default=None, max_length=100)
-
-    model_config = ConfigDict(extra="forbid")
-
-
 class DocumentUpdate(BaseModel):
     original_filename: str | None = Field(
         default=None, min_length=1, max_length=255
