@@ -295,6 +295,97 @@ if (path === "/rules" && method === "POST") {
   return mockDelay(newRule)
 }
 
+if (path.match(/^\/rules\/[^/]+\/dry-run$/) && method === "POST") {
+  const ruleId = path.split("/")[2]
+  const body = JSON.parse((options.body as string) || "{}")
+
+  const rule = mockRules.find((item) => item.id === ruleId)
+
+  if (!rule) {
+    throw new Error("Rule not found")
+  }
+
+  const bidder = mockBidders.find(
+    (item) => item.id === Number(body.bidderId)
+  )
+
+  if (!bidder) {
+    throw new Error("Bidder not found")
+  }
+
+  let actualValue = "Not available"
+  let passed = false
+
+  if (rule.requirementType === "Turnover Threshold") {
+    const turnoverByBidder: Record<number, number> = {
+      1: 8200000,
+      2: 4200000,
+      3: 6500000,
+      4: 9500000,
+      5: 3000000,
+    }
+
+    const actual = turnoverByBidder[bidder.id] ?? 0
+    const required = Number(
+      rule.value.replace(/[₹,\s]/g, "")
+    )
+
+    actualValue = `₹${actual.toLocaleString("en-IN")}`
+    passed = actual >= required
+  } else if (rule.requirementType === "MSE Preference") {
+    const preferenceByBidder: Record<number, number> = {
+      1: 25,
+      2: 10,
+      3: 20,
+      4: 30,
+      5: 5,
+    }
+
+    const actual = preferenceByBidder[bidder.id] ?? 0
+    const required = Number(
+      rule.value.replace("%", "").trim()
+    )
+
+    actualValue = `${actual}%`
+    passed = actual >= required
+  } else if (
+    rule.requirementType === "Local Content (Class-I)"
+  ) {
+    const localContentByBidder: Record<number, number> = {
+      1: 70,
+      2: 45,
+      3: 55,
+      4: 80,
+      5: 30,
+    }
+
+    const actual = localContentByBidder[bidder.id] ?? 0
+    const required = Number(
+      rule.value.replace("%", "").trim()
+    )
+
+    actualValue = `${actual}%`
+    passed = actual >= required
+  } else {
+    actualValue = "Sample value"
+    passed = true
+  }
+
+  return mockDelay({
+    ruleId: rule.id,
+    ruleVersion: rule.version,
+    bidderId: bidder.id,
+    bidderName: bidder.name,
+    requirement: rule.requirementType,
+    requiredValue: rule.value,
+    actualValue,
+    result: passed ? "PASS" : "FAIL",
+    message: passed
+      ? "The bidder satisfies this rule in the dry-run simulation."
+      : "The bidder does not satisfy this rule in the dry-run simulation.",
+  })
+}
+
 if (path.match(/^\/rules\/[^/]+\/versions$/) && method === "POST") {
   const sourceRuleId = path.split("/")[2]
 

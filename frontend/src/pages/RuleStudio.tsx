@@ -40,7 +40,27 @@ type Rule = {
   version: string
   status: string
 }
+type Bidder = {
+  id: number
+  name: string
+  gstin: string
+  complianceScore: number
+  verificationDepth: number
+  riskLevel: string
+  status: string
+}
 
+type DryRunResult = {
+  ruleId: string
+  ruleVersion: string
+  bidderId: number
+  bidderName: string
+  requirement: string
+  requiredValue: string
+  actualValue: string
+  result: "PASS" | "FAIL"
+  message: string
+}
 const ruleSchema = z.object({
   tenderName: z.string().min(2, "Required"),
   requirementType: z.string().min(2, "Required"),
@@ -49,13 +69,21 @@ const ruleSchema = z.object({
 
 export default function RuleStudio() {
   const [open, setOpen] = useState(false)
-  const queryClient = useQueryClient()
+const [dryRunOpen, setDryRunOpen] = useState(false)
+const [selectedRule, setSelectedRule] = useState<Rule | null>(null)
+const [selectedBidderId, setSelectedBidderId] = useState("")
+const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null)
+
+const queryClient = useQueryClient()
 
   const { data: rules, isLoading } = useQuery<Rule[]>({
     queryKey: ["rules"],
     queryFn: () => apiFetch("/rules"),
   })
-
+const { data: bidders } = useQuery<Bidder[]>({
+  queryKey: ["bidders"],
+  queryFn: () => apiFetch("/bidders"),
+})
   const createRule = useMutation({
     mutationFn: (values: z.infer<typeof ruleSchema>) =>
       apiFetch("/rules", {
@@ -78,6 +106,23 @@ export default function RuleStudio() {
       queryClient.invalidateQueries({ queryKey: ["rules"] })
     },
   })
+
+  const dryRunRule = useMutation({
+  mutationFn: async ({
+    ruleId,
+    bidderId,
+  }: {
+    ruleId: string
+    bidderId: number
+  }) =>
+    apiFetch(`/rules/${ruleId}/dry-run`, {
+      method: "POST",
+      body: JSON.stringify({ bidderId }),
+    }),
+  onSuccess: (result: DryRunResult) => {
+    setDryRunResult(result)
+  },
+})
 
   const deleteRule = useMutation({
     mutationFn: (id: string) =>
@@ -188,6 +233,152 @@ export default function RuleStudio() {
             </FormProvider>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={dryRunOpen} onOpenChange={setDryRunOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Rule Dry-Run Simulator</DialogTitle>
+    </DialogHeader>
+
+    {selectedRule && (
+      <div className="space-y-5">
+        <div className="rounded-lg border p-4 space-y-2">
+          <div className="font-medium">
+            {selectedRule.tenderName}
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            {selectedRule.requirementType}
+          </div>
+
+          <div className="text-sm">
+            Required Value:{" "}
+            <span className="font-medium">
+              {selectedRule.value}
+            </span>
+          </div>
+
+          <div className="text-sm">
+            Rule Version:{" "}
+            <Badge variant="outline">
+              {selectedRule.version}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Select Bidder
+          </label>
+
+          <select
+            value={selectedBidderId}
+            onChange={(event) => {
+              setSelectedBidderId(event.target.value)
+              setDryRunResult(null)
+            }}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Select a bidder</option>
+
+            {bidders?.map((bidder) => (
+              <option key={bidder.id} value={bidder.id}>
+                {bidder.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <UiButton
+          className="w-full"
+          disabled={
+            !selectedBidderId ||
+            dryRunRule.isPending
+          }
+          onClick={() => {
+            if (!selectedRule || !selectedBidderId) return
+
+            dryRunRule.mutate({
+              ruleId: selectedRule.id,
+              bidderId: Number(selectedBidderId),
+            })
+          }}
+        >
+          {dryRunRule.isPending
+            ? "Running Simulation..."
+            : "Run Simulation"}
+        </UiButton>
+
+        {dryRunResult && (
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">
+                Simulation Result
+              </h3>
+
+              <Badge
+                variant={
+                  dryRunResult.result === "PASS"
+                    ? "default"
+                    : "destructive"
+                }
+              >
+                {dryRunResult.result}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-muted-foreground">
+                  Bidder
+                </div>
+                <div className="font-medium">
+                  {dryRunResult.bidderName}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-muted-foreground">
+                  Rule Version
+                </div>
+                <div className="font-medium">
+                  {dryRunResult.ruleVersion}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-muted-foreground">
+                  Required
+                </div>
+                <div className="font-medium">
+                  {dryRunResult.requiredValue}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-muted-foreground">
+                  Actual
+                </div>
+                <div className="font-medium">
+                  {dryRunResult.actualValue}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-md bg-muted p-3 text-sm">
+              {dryRunResult.message}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Simulation only. No bidder decision or compliance
+              status has been changed.
+            </p>
+          </div>
+        )}
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
       </div>
 
       <Table>
@@ -254,25 +445,38 @@ export default function RuleStudio() {
               </TableCell>
 
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <UiButton
-                    variant="outline"
-                    size="sm"
-                    onClick={() => createVersion.mutate(rule.id)}
-                    disabled={createVersion.isPending}
-                  >
-                    New Version
-                  </UiButton>
+<div className="flex justify-end gap-2">
+  <UiButton
+    variant="outline"
+    size="sm"
+    onClick={() => {
+      setSelectedRule(rule)
+      setSelectedBidderId("")
+      setDryRunResult(null)
+      setDryRunOpen(true)
+    }}
+  >
+    Dry Run
+  </UiButton>
 
-                  <UiButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteRule.mutate(rule.id)}
-                    disabled={deleteRule.isPending}
-                  >
-                    Delete
-                  </UiButton>
-                </div>
+  <UiButton
+    variant="outline"
+    size="sm"
+    onClick={() => createVersion.mutate(rule.id)}
+    disabled={createVersion.isPending}
+  >
+    New Version
+  </UiButton>
+
+  <UiButton
+    variant="ghost"
+    size="sm"
+    onClick={() => deleteRule.mutate(rule.id)}
+    disabled={deleteRule.isPending}
+  >
+    Delete
+  </UiButton>
+</div>
               </TableCell>
             </TableRow>
           ))}
