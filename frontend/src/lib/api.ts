@@ -3,9 +3,33 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
 
 let mockRules = [
-  { id: "1", tenderName: "Refinery Equipment Supply", requirementType: "Turnover Threshold", value: "₹50,00,000", status: "Active" },
-  { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
-  { id: "3", tenderName: "Pipeline Maintenance", requirementType: "Local Content (Class-I)", value: "50%", status: "Draft" },
+  {
+    id: "1",
+    ruleKey: "rule-1",
+    tenderName: "Refinery Equipment Supply",
+    requirementType: "Turnover Threshold",
+    value: "₹50,00,000",
+    version: "v1.0",
+    status: "Active",
+  },
+  {
+    id: "2",
+    ruleKey: "rule-2",
+    tenderName: "IT Infrastructure Upgrade",
+    requirementType: "MSE Preference",
+    value: "20%",
+    version: "v1.0",
+    status: "Active",
+  },
+  {
+    id: "3",
+    ruleKey: "rule-3",
+    tenderName: "Pipeline Maintenance",
+    requirementType: "Local Content (Class-I)",
+    value: "50%",
+    version: "v1.0",
+    status: "Draft",
+  },
 ]
 const mockBidders = [
   { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
@@ -247,17 +271,68 @@ if (USE_MOCK) {
     })
   }
 
-  if (path === "/rules" && method === "POST") {
-    const body = JSON.parse(options.body as string)
-    const newRule = {
-      id: String(Date.now()),
-      status: "Draft",
-      ...body,
-    }
+if (path === "/rules" && method === "POST") {
+  const body = JSON.parse(options.body as string || "{}")
 
-    mockRules = [...mockRules, newRule]
-    return mockDelay(newRule)
+  const nextRuleNumber =
+    mockRules.reduce((max, rule) => {
+      const match = rule.ruleKey.match(/^rule-(\d+)$/)
+      return Math.max(max, match ? Number(match[1]) : 0)
+    }, 0) + 1
+
+  const newRule = {
+    id: String(Date.now()),
+    ruleKey: `rule-${nextRuleNumber}`,
+    tenderName: body.tenderName,
+    requirementType: body.requirementType,
+    value: body.value,
+    version: "v1.0",
+    status: "Draft",
   }
+
+  mockRules.push(newRule)
+
+  return mockDelay(newRule)
+}
+
+if (path.match(/^\/rules\/[^/]+\/versions$/) && method === "POST") {
+  const sourceRuleId = path.split("/")[2]
+
+  const sourceRule = mockRules.find(
+    (rule) => rule.id === sourceRuleId
+  )
+
+  if (!sourceRule) {
+    throw new Error("Rule not found")
+  }
+
+  const versions = mockRules.filter(
+    (rule) => rule.ruleKey === sourceRule.ruleKey
+  )
+
+  const highestVersion = versions.reduce((highest, rule) => {
+    const match = rule.version.match(/^v1\.(\d+)$/)
+    return Math.max(highest, match ? Number(match[1]) : 0)
+  }, 0)
+
+  if (sourceRule.status === "Active") {
+    sourceRule.status = "Archived"
+  }
+
+  const newRule = {
+    id: String(Date.now()),
+    ruleKey: sourceRule.ruleKey,
+    tenderName: sourceRule.tenderName,
+    requirementType: sourceRule.requirementType,
+    value: sourceRule.value,
+    version: `v1.${highestVersion + 1}`,
+    status: "Draft",
+  }
+
+  mockRules.push(newRule)
+
+  return mockDelay(newRule)
+}
 
   if (path.startsWith("/rules/") && method === "DELETE") {
     const id = path.split("/")[2]
