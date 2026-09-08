@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "SIH Project"
+    PROJECT_NAME: str = "PRAMAAN"
     ENVIRONMENT: str = "development"
 
     POSTGRES_SERVER: str = "localhost"
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     ML1_CONNECT_TIMEOUT_SECONDS: float = 5.0
     ML1_READ_TIMEOUT_SECONDS: float = 30.0
     ML1_TOTAL_TIMEOUT_SECONDS: float = 35.0
+
+    # Compatibility settings for the synchronous SIH demonstration path.
+    STORAGE_ROOT: str = "./storage"
+    MAX_UPLOAD_SIZE_MB: int = 25
+    ML_SERVICE_URL: str = "http://localhost:8001"
+    ML_REQUEST_TIMEOUT_SECONDS: int = 120
 
     model_config = SettingsConfigDict(
         env_file=".env",

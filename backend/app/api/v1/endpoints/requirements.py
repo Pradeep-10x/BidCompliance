@@ -9,11 +9,13 @@ from app.models.requirement import Requirement
 from app.models.user import User
 from app.schemas.requirement import (
     RequirementCreate,
+    RequirementConfirmRequest,
     RequirementResponse,
     RequirementUpdate,
 )
 from app.services.requirement_service import (
     create_requirement,
+    confirm_requirements,
     delete_requirement,
     get_requirement,
     get_tender,
@@ -36,6 +38,25 @@ async def require_tender(
 ) -> None:
     if await get_tender(db, tender_id) is None:
         raise not_found()
+
+
+@router.post("/confirm", response_model=list[RequirementResponse])
+async def confirm(
+    tender_id: UUID,
+    confirmation: RequirementConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> list[Requirement]:
+    await require_tender(db, tender_id)
+    try:
+        return await confirm_requirements(
+            db,
+            tender_id=tender_id,
+            requirement_ids=confirmation.requirement_ids,
+            actor_id=current_user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("", response_model=RequirementResponse, status_code=status.HTTP_201_CREATED)

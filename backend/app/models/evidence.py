@@ -24,7 +24,7 @@ class Evidence(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     evidence_id: Mapped[str] = mapped_column(
-        String(150), unique=True, nullable=False, index=True
+        String(150), nullable=False, index=True
     )
     source_evidence_id: Mapped[Optional[str]] = mapped_column(
         String(150), nullable=True, index=True

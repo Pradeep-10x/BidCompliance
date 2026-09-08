@@ -35,7 +35,7 @@ class ML1Client:
         try:
             try:
                 response = await client.post(
-                    "/ml/v1/document-intelligence", json=request.model_dump(mode="json")
+                    "/ml1/document-intelligence", json=request.model_dump(mode="json")
                 )
                 response.raise_for_status()
             except (httpx.HTTPError, httpx.TimeoutException) as exc:

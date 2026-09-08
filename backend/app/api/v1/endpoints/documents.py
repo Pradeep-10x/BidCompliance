@@ -10,6 +10,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -18,6 +19,7 @@ from app.core.rbac import get_current_active_user
 from app.models.document import Document
 from app.models.user import User
 from app.schemas.document import DocumentResponse, DocumentUpdate
+from app.schemas.compliance import DocumentProcessingResponse, ExtractedFactResponse
 from app.services.document_service import (
     create_document,
     get_bid,
@@ -44,6 +46,12 @@ from app.schemas.evidence import EvidenceResponse
 from app.services.evidence_service import (
     get_document_evidence,
     list_document_evidence,
+)
+from app.services.processing_service import (
+    list_document_facts,
+    process_document_with_ml,
+    resolve_document_path,
+    store_uploaded_document,
 )
 
 router = APIRouter()
@@ -86,6 +94,29 @@ async def validate_upload(file: UploadFile) -> str:
             detail="Uploaded file signature does not match its MIME type",
         )
     return mime_type
+
+
+@router.post(
+    "/upload",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload, validate, hash, and store a bidder document",
+)
+async def upload_document(
+    tender_id: UUID,
+    bid_id: UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Document:
+    await require_bid(db, tender_id, bid_id)
+    return await store_uploaded_document(
+        db,
+        tender_id=tender_id,
+        bid_id=bid_id,
+        actor_id=current_user.id,
+        upload=file,
+    )
 
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
@@ -170,6 +201,68 @@ async def get_one(
     return document
 
 
+@router.post("/{document_id}/process", response_model=DocumentProcessingResponse)
+async def process_document(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> DocumentProcessingResponse:
+    await require_bid(db, tender_id, bid_id)
+    document = await get_document(db, bid_id, document_id)
+    if document is None:
+        raise not_found("Document not found")
+    facts, confidence, warnings = await process_document_with_ml(
+        db,
+        document=document,
+        tender_id=tender_id,
+        actor_id=current_user.id,
+    )
+    await db.refresh(document)
+    return DocumentProcessingResponse(
+        document_id=document.id,
+        processing_status=document.processing_status.value,
+        document_type=document.document_type,
+        classification_confidence=confidence,
+        facts=[ExtractedFactResponse.model_validate(fact) for fact in facts],
+        warnings=warnings,
+    )
+
+
+@router.get("/{document_id}/facts", response_model=list[ExtractedFactResponse])
+async def get_facts(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_bid(db, tender_id, bid_id)
+    document = await get_document(db, bid_id, document_id)
+    if document is None:
+        raise not_found("Document not found")
+    return await list_document_facts(db, document.id)
+
+
+@router.get("/{document_id}/download", response_class=FileResponse)
+async def download_document(
+    tender_id: UUID,
+    bid_id: UUID,
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_bid(db, tender_id, bid_id)
+    document = await get_document(db, bid_id, document_id)
+    if document is None:
+        raise not_found("Document not found")
+    path = resolve_document_path(document)
+    if not path.exists():
+        raise not_found("Stored document bytes were not found")
+    return FileResponse(path, media_type=document.mime_type, filename=document.original_filename)
+
+
 @router.patch("/{document_id}", response_model=DocumentResponse)
 async def update(
     tender_id: UUID,
@@ -252,4 +345,3 @@ async def get_evidence(
     if evidence is None:
         raise not_found("Evidence not found")
     return evidence
-

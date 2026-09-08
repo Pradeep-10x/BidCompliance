@@ -1,28 +1,34 @@
 import uuid
+import os
+import time
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
+from uuid import UUID
+
 from fastapi import APIRouter, File, UploadFile
 from pydantic import BaseModel
+from shared.validators import validate_image_bytes, validate_image_path
 
-from shared.validators import validate_image_path, validate_image_bytes
+from .classifier import classify_document
+from .field_extractors.bis import extract_bis_fields
+from .field_extractors.ca import extract_ca_fields
+from .field_extractors.dpiit import extract_dpiit_fields
+from .field_extractors.gst import extract_gst_fields
+from .field_extractors.mca import extract_mca_fields
+from .field_extractors.mii import extract_mii_fields
+from .field_extractors.oem import extract_oem_fields
+from .field_extractors.pan import extract_pan_fields
+from .field_extractors.standing import extract_standing_fields
+from .field_extractors.udyam import extract_udyam_fields
 from .ocr_service import (
-    run_ocr,
-    run_ocr_from_bytes,
-    is_tesseract_available,
-    run_ocr_multi,
+    extract_from_digital_pdf_bytes,
     extract_word_data_multi,
     find_phrase_box,
+    is_tesseract_available,
+    run_ocr_from_bytes,
+    run_ocr_multi,
 )
-from .classifier import classify_document
-from .field_extractors.gst import extract_gst_fields
-from .field_extractors.pan import extract_pan_fields
-from .field_extractors.udyam import extract_udyam_fields
-from .field_extractors.mca import extract_mca_fields
-from .field_extractors.bis import extract_bis_fields
-from .field_extractors.dpiit import extract_dpiit_fields
-from .field_extractors.ca import extract_ca_fields
-from .field_extractors.oem import extract_oem_fields
-from .field_extractors.mii import extract_mii_fields
-from .field_extractors.standing import extract_standing_fields
 
 router = APIRouter(prefix="/ml1", tags=["Document Intelligence"])
 
@@ -47,6 +53,42 @@ EXTRACTOR_MAP = {
 
 class DocumentPathRequest(BaseModel):
     image_path: str
+
+
+class DocumentIntelligenceRequest(BaseModel):
+    job_id: UUID
+    bid_id: UUID
+    document_id: UUID
+    page_id: UUID | None
+    page_number: int
+    file_type: str
+    image_path: str
+    document_hash: str
+    callback_url: str | None
+    pipeline_stage: str
+
+
+def _extract_uploaded_pages(content: bytes, filename: str | None) -> list[str]:
+    """Extract page text from a digital PDF or OCR an image/scanned PDF."""
+    validate_image_bytes(content, filename=filename)
+    if content.startswith(b"%PDF-"):
+        digital_result = extract_from_digital_pdf_bytes(content)
+        if digital_result:
+            return digital_result["page_texts"]
+    return [run_ocr_from_bytes(content)]
+
+
+def _resolve_queued_document_path(image_path: str) -> Path:
+    root = Path(os.getenv("ML_DOCUMENT_ROOT", ".")).resolve()
+    candidate = Path(image_path)
+    target = (
+        candidate.resolve()
+        if candidate.is_absolute()
+        else (root / candidate).resolve()
+    )
+    if root != target and root not in target.parents:
+        raise ValueError("Document path escapes ML_DOCUMENT_ROOT")
+    return validate_image_path(str(target))
 
 
 def _build_pipeline_result(
@@ -88,20 +130,29 @@ def _build_pipeline_result(
                 bbox_info = phrase_result["bbox"]
                 page_number = phrase_result["page"]
 
-        unified_fields.append({
-            # PRD §5.2 ExtractedFact schema
-            "field": field_name,
-            "raw_value": raw_val,
-            "normalized_value": f.get("value_normalized") or raw_val,
-            "confidence": conf,
-            "page_number": page_number,
-            "bbox": bbox_info,
-            "extraction_method": method,
-            "extractor_version": EXTRACTOR_VERSION,
-            "evidence_id": f.get("evidence_id") or f"ev_{uuid.uuid4().hex[:8]}",
-            "document_id": doc_id,
-        })
-
+        normalized_value = f.get("value_normalized") or raw_val
+        evidence_id = f.get("evidence_id") or f"ev_{uuid.uuid4().hex[:8]}"
+        unified_fields.append(
+            {
+                "field": field_name,
+                # Keep both canonical PRD names and compatibility aliases while
+                # the queued and synchronous prototype consumers coexist.
+                "value": raw_val,
+                "raw_value": raw_val,
+                "confidence": conf,
+                "page": page_number,
+                "page_number": page_number,
+                "bounding_box": bbox_info,
+                "bbox": bbox_info,
+                "value_normalized": normalized_value,
+                "normalized_value": normalized_value,
+                "extraction_method": method,
+                "source_text": f.get("source_text"),
+                "extractor_version": EXTRACTOR_VERSION,
+                "evidence_id": evidence_id,
+                "document_id": doc_id,
+            }
+        )
     return {
         "document_id": doc_id,
         "document_classification": classification,
@@ -139,19 +190,48 @@ def process_document(request: DocumentPathRequest):
 async def classify_upload(file: UploadFile = File(...)):
     """OCR + classification directly from an uploaded binary file stream."""
     image_bytes = await file.read()
-    validate_image_bytes(image_bytes, filename=file.filename)
-    ocr_text = run_ocr_from_bytes(image_bytes)
-    return classify_document(ocr_text)
+    pages = _extract_uploaded_pages(image_bytes, file.filename)
+    return classify_document("\n".join(pages))
 
 
 @router.post("/process/upload")
 async def process_document_upload(file: UploadFile = File(...)):
     """Full pipeline directly from an uploaded binary file stream."""
     image_bytes = await file.read()
-    validate_image_bytes(image_bytes, filename=file.filename)
-    ocr_text = run_ocr_from_bytes(image_bytes)
-    doc_id = f"doc_{file.filename.split('.')[0] if file.filename else uuid.uuid4().hex[:8]}"
-    return _build_pipeline_result([ocr_text], word_data=None, document_id=doc_id)
+    pages = _extract_uploaded_pages(image_bytes, file.filename)
+    doc_id = (
+        f"doc_{file.filename.split('.')[0] if file.filename else uuid.uuid4().hex[:8]}"
+    )
+    return _build_pipeline_result(pages, word_data=None, document_id=doc_id)
+
+
+@router.post("/document-intelligence")
+def document_intelligence(request: DocumentIntelligenceRequest):
+    """Process the identity-bound job envelope used by the Celery worker."""
+    started = time.perf_counter()
+    path = _resolve_queued_document_path(request.image_path)
+    pages = run_ocr_multi(str(path))
+    word_data = extract_word_data_multi(str(path))
+    result = _build_pipeline_result(
+        pages,
+        word_data=word_data,
+        document_id=str(request.document_id),
+    )
+    return {
+        "job_id": request.job_id,
+        "bid_id": request.bid_id,
+        "document_id": request.document_id,
+        "page_id": request.page_id,
+        "page_number": request.page_number,
+        "module": "ml1_document_intelligence",
+        "model_name": "tesseract_rule_pipeline",
+        "model_version": EXTRACTOR_VERSION,
+        "status": "success",
+        "processing_time_ms": int((time.perf_counter() - started) * 1000),
+        "result": result,
+        "errors": [],
+        "created_at": datetime.now(timezone.utc),
+    }
 
 
 @router.get("/health")

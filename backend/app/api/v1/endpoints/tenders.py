@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -8,6 +8,7 @@ from app.core.rbac import get_current_active_user
 from app.models.tender import Tender
 from app.models.user import User
 from app.schemas.tender import TenderCreate, TenderResponse, TenderUpdate
+from app.schemas.tender_document import TenderAnalysisResponse, TenderDocumentResponse
 from app.services.tender_service import (
     DuplicateReferenceNumberError,
     InvalidTenderDatesError,
@@ -17,12 +18,69 @@ from app.services.tender_service import (
     list_tenders,
     update_tender,
 )
+from app.services.tender_analysis_service import (
+    analyze_latest_tender,
+    list_tender_documents,
+    store_tender_document,
+)
 
 router = APIRouter()
 
 
 def tender_not_found() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tender not found")
+
+
+@router.post(
+    "/{tender_id}/documents",
+    response_model=TenderDocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_tender_document(
+    tender_id: UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    tender = await get_tender(db, tender_id)
+    if tender is None:
+        raise tender_not_found()
+    return await store_tender_document(
+        db, tender_id=tender_id, actor_id=current_user.id, upload=file
+    )
+
+
+@router.get("/{tender_id}/documents", response_model=list[TenderDocumentResponse])
+async def get_tender_documents(
+    tender_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    tender = await get_tender(db, tender_id)
+    if tender is None:
+        raise tender_not_found()
+    return await list_tender_documents(db, tender_id)
+
+
+@router.post("/{tender_id}/analyze", response_model=TenderAnalysisResponse)
+async def analyze_tender(
+    tender_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    tender = await get_tender(db, tender_id)
+    if tender is None:
+        raise tender_not_found()
+    document, candidates, warnings = await analyze_latest_tender(
+        db, tender_id=tender_id, actor_id=current_user.id
+    )
+    return TenderAnalysisResponse(
+        tender_document_id=document.id,
+        processing_status=document.processing_status,
+        extracted_character_count=len(document.extracted_text or ""),
+        candidates=candidates,
+        warnings=warnings,
+    )
 
 
 @router.post("", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)

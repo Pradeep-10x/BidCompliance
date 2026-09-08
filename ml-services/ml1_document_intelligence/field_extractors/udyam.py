@@ -7,6 +7,8 @@ from typing import List, Dict, Any
 
 # Official Udyam format: UDYAM-XX-99-9999999
 OFFICIAL_UDYAM_PATTERN = re.compile(r"UDYAM-[A-Z]{2}-\d{2}-\d{7}")
+# OCR commonly duplicates the leading S in the synthetic watermark/typeface.
+SYNTHETIC_UDYAM_PATTERN = re.compile(r"\bS+YN[-_]UDYAM[-_]\d+\b", re.IGNORECASE)
 
 
 def extract_udyam_fields(ocr_text: str) -> List[Dict[str, Any]]:
@@ -23,6 +25,12 @@ def extract_udyam_fields(ocr_text: str) -> List[Dict[str, Any]]:
         udyam_number = official_match.group()
         confidence = 0.95
         method = "regex_official_udyam_format"
+    else:
+        synthetic_match = SYNTHETIC_UDYAM_PATTERN.search(ocr_text)
+        if synthetic_match:
+            udyam_number = re.sub(r"^S+YN", "SYN", synthetic_match.group().upper())
+            confidence = 0.90
+            method = "regex_synthetic_udyam_format"
 
     fields.append({
         "field": "udyam_registration_number",

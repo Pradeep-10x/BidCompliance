@@ -13,6 +13,7 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.models.bid import Bid
     from app.models.requirement import Requirement
+    from app.models.tender_document import TenderDocument
 
 
 class TenderStatus(str, enum.Enum):
@@ -64,4 +65,7 @@ class Tender(Base):
     )
     bids: Mapped[list["Bid"]] = relationship(
         "Bid", back_populates="tender", cascade="all, delete-orphan"
+    )
+    documents: Mapped[list["TenderDocument"]] = relationship(
+        "TenderDocument", back_populates="tender", cascade="all, delete-orphan"
     )

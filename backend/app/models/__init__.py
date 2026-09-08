@@ -8,6 +8,16 @@ from app.models.processing_job import ProcessingJob, ProcessingJobStatus, Pipeli
 from app.models.ml_processing_result import MLProcessingResult
 from app.models.evidence import Evidence
 from app.models.requirement_evaluation import RequirementEvaluation
+from app.models.tender_document import TenderDocument
+from app.models.compliance import (
+    Assessment,
+    AuditEvent,
+    Decision,
+    ExtractedFact,
+    Finding,
+    RequirementResult,
+    VerificationResult,
+)
 
 __all__ = [
     "User",
@@ -26,4 +36,12 @@ __all__ = [
     "MLProcessingResult",
     "Evidence",
     "RequirementEvaluation",
+    "TenderDocument",
+    "ExtractedFact",
+    "VerificationResult",
+    "Assessment",
+    "RequirementResult",
+    "Finding",
+    "Decision",
+    "AuditEvent",
 ]

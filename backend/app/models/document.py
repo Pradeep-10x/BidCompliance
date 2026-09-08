@@ -17,9 +17,15 @@ if TYPE_CHECKING:
 
 class DocumentProcessingStatus(str, enum.Enum):
     PENDING = "PENDING"
+    UPLOADED = "UPLOADED"
+    QUEUED = "QUEUED"
     PROCESSING = "PROCESSING"
+    OCR = "OCR"
+    EXTRACTING = "EXTRACTING"
+    READY = "READY"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    REVIEW = "REVIEW"
 
 
 class Document(Base):

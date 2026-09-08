@@ -7,7 +7,6 @@ Architecture (aligned to PRD §11.1):
 
 Pre-processing pipeline for scanned documents:
     - Grayscale conversion
-    - Otsu binary thresholding (removes watermarks, colored backgrounds)
     - Optional deskew via minAreaRect rotation
     - DPI normalization hint to Tesseract
 
@@ -42,12 +41,18 @@ DEFAULT_WIN_TESSERACT = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
 if not shutil.which("tesseract") and DEFAULT_WIN_TESSERACT.exists():
     pytesseract.pytesseract.tesseract_cmd = str(DEFAULT_WIN_TESSERACT)
 
-# Tesseract config: treat as a single block of text, use eng, apply DPI hint
-TESSERACT_CONFIG = "--oem 3 --psm 6 -l eng --dpi 300"
+# Government certificates commonly mix headers, tables, and footer declarations.
+# Automatic page segmentation preserves those regions substantially better than
+# treating the entire page as one uniform block.
+TESSERACT_CONFIG = "--oem 3 --psm 3 -l eng --dpi 300"
 
 # Minimum characters for a PDF page to be considered digitally-generated
 # (vs. a scanned/image-only page)
 DIGITAL_TEXT_MIN_CHARS = 50
+
+# Normalize small screenshots/exports to roughly an A4 scan width before OCR.
+# Larger scans are left untouched to avoid unnecessary memory and latency.
+MIN_OCR_WIDTH = 2400
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -69,34 +74,21 @@ def preprocess_image_for_ocr(pil_image: Image.Image) -> Image.Image:
 
     Pipeline:
         1. Convert to grayscale
-        2. Otsu binary thresholding (removes watermarks, Ashoka emblem, stamps)
-        3. Morphological noise removal (optional small kernel open)
-        4. Return cleaned binary image
+        2. Upscale low-resolution pages while preserving aspect ratio
+        3. Preserve thin text strokes for OCR
 
-    Falls back to original image if OpenCV is unavailable.
+    Aggressive thresholding and morphology are deliberately avoided here. They
+    erase thin glyphs in certificate tables; Tesseract handles the grayscale
+    page more reliably across clean digital exports and scans.
     """
-    cv2 = _try_import_cv2()
-    if cv2 is None:
-        return pil_image.convert("L")  # At minimum, convert to grayscale
-
-    try:
-        # PIL → numpy → OpenCV
-        img_array = np.array(pil_image.convert("RGB"))
-        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-
-        # Otsu thresholding — automatically finds optimal threshold
-        # This removes colored backgrounds, watermarks, and light stamps
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-        # Morphological opening to remove small noise specks
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        cleaned = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
-
-        return Image.fromarray(cleaned)
-
-    except Exception as e:
-        logger.warning("Image pre-processing failed (%s), using grayscale fallback.", e)
-        return pil_image.convert("L")
+    grayscale = pil_image.convert("L")
+    if grayscale.width >= MIN_OCR_WIDTH:
+        return grayscale
+    scale = MIN_OCR_WIDTH / grayscale.width
+    return grayscale.resize(
+        (MIN_OCR_WIDTH, round(grayscale.height * scale)),
+        Image.Resampling.LANCZOS,
+    )
 
 
 def deskew_image(pil_image: Image.Image) -> Image.Image:
@@ -460,7 +452,10 @@ def extract_word_data_multi(image_path: str) -> list[dict]:
     for page_idx, img in enumerate(pages, start=1):
         # Pre-process before word-level extraction
         img = deskew_image(img)
+        original_width, original_height = img.size
         img = preprocess_image_for_ocr(img)
+        scale_x = original_width / img.width
+        scale_y = original_height / img.height
 
         data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=TESSERACT_CONFIG)
         n = len(data.get("text", []))
@@ -473,12 +468,16 @@ def extract_word_data_multi(image_path: str) -> list[dict]:
                 conf = float(conf_raw) / 100.0 if conf_raw != "-1" else 0.0
             except ValueError:
                 conf = 0.0
-            x, y, w, h = (
+            processed_x, processed_y, processed_w, processed_h = (
                 data["left"][i],
                 data["top"][i],
                 data["width"][i],
                 data["height"][i],
             )
+            x = round(processed_x * scale_x)
+            y = round(processed_y * scale_y)
+            w = round(processed_w * scale_x)
+            h = round(processed_h * scale_y)
             words.append({
                 "text": txt,
                 "bbox": [x, y, x + w, y + h],

@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, func, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +27,17 @@ class Requirement(Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default="ADDED_MANUALLY", nullable=False, index=True)
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    clause_reference: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    source_page: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    evidence_types: Mapped[list] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb"), nullable=False
+    )
+    verification_sources: Mapped[list] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb"), nullable=False
+    )
+    extraction_confidence: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 4), nullable=True)
     is_mandatory: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False
     )
