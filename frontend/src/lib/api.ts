@@ -15,6 +15,35 @@ const mockBidders = [
   { id: 5, name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified" },
 ]
 
+const mockFindings: Record<number, Array<{
+  id: string
+  requirement: string
+  category: string
+  status: string
+  source: string
+  evidenceRef: string
+}>> = {
+  1: [
+    { id: "f1", requirement: "GST Registration Active", category: "GST_REGISTRATION", status: "PASS", source: "GST Public API", evidenceRef: "ev-gst-001" },
+    { id: "f2", requirement: "Udyam/MSME Registration", category: "MSME_REGISTRATION", status: "PASS", source: "OGD Dataset", evidenceRef: "ev-udyam-001" },
+    { id: "f3", requirement: "Debarment Check", category: "DEBARMENT", status: "PASS", source: "Federated Index", evidenceRef: "ev-debar-001" },
+  ],
+  2: [
+    { id: "f4", requirement: "GST Registration Active", category: "GST_REGISTRATION", status: "MISMATCH", source: "GST Public API", evidenceRef: "ev-gst-002" },
+    { id: "f5", requirement: "PAN Verification", category: "PAN_INCOME_TAX", status: "REVIEW", source: "ITD Mock", evidenceRef: "ev-pan-002" },
+    { id: "f6", requirement: "EPFO Compliance", category: "EPFO", status: "UNAVAILABLE", source: "EPFO Portal", evidenceRef: "ev-epfo-002" },
+  ],
+}
+
+// default fallback for bidders 3-5
+function getFindings(bidderId: number) {
+  return mockFindings[bidderId] ?? [
+    { id: `f-${bidderId}-1`, requirement: "GST Registration Active", category: "GST_REGISTRATION", status: "PASS", source: "GST Public API", evidenceRef: `ev-${bidderId}-1` },
+    { id: `f-${bidderId}-2`, requirement: "Local Content Declaration", category: "MII", status: "UNVERIFIED", source: "Self-Declaration", evidenceRef: `ev-${bidderId}-2` },
+    { id: `f-${bidderId}-3`, requirement: "OEM Authorization", category: "OEM", status: "NOT_APPLICABLE", source: "N/A", evidenceRef: `ev-${bidderId}-3` },
+  ]
+}
+
 const mockAuditEntries = [
   {
     id: 1,
@@ -151,6 +180,9 @@ const mockResponses: Record<string, unknown> = {
     is_active: true,
   },
 
+  "GET /bidders/1/findings": mockFindings[1],
+  "GET /bidders/2/findings": mockFindings[2],
+
 }
 
 function mockDelay<T>(data: T, ms = 400): Promise<T> {
@@ -160,83 +192,107 @@ function mockDelay<T>(data: T, ms = 400): Promise<T> {
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const method = (options.method || "GET").toUpperCase()
 
-  if (USE_MOCK) {
-
-      if (path === "/rules" && method === "GET") {
+if (USE_MOCK) {
+  if (path === "/rules" && method === "GET") {
     return mockDelay(mockRules)
   }
+
+  if (path.match(/^\/bidders\/\d+\/findings$/) && method === "GET") {
+    const bidderId = Number(path.split("/")[2])
+    return mockDelay(getFindings(bidderId))
+  }
+
   if (path.startsWith("/audit") && method === "GET") {
-  const url = new URL(`http://localhost${path}`)
+    const url = new URL(`http://localhost${path}`)
 
-  const bidderId = url.searchParams.get("bidderId")
-  const tenderId = url.searchParams.get("tenderId")
+    const bidderId = url.searchParams.get("bidderId")
+    const tenderId = url.searchParams.get("tenderId")
 
-  let results = [...mockAuditEntries]
+    let results = [...mockAuditEntries]
 
-  if (bidderId) {
-    results = results.filter((entry) => entry.bidderId === bidderId)
-  }
-
-  if (tenderId) {
-    results = results.filter((entry) => entry.tenderId === tenderId)
-  }
-
-  return mockDelay(results)
-}
-  if (path === "/bidders" && method === "GET") {
-  return mockDelay(mockBidders)
-}
-if (path === "/officer/decision" && method === "POST") {
-  const body = JSON.parse(options.body as string)
-  const bidder = mockBidders.find((b) => b.id === body.bidderId)
-  if (bidder) {
-    const statusMap: Record<string, string> = {
-      accept: "Recommended",
-      override: "Conditional",
-      escalate: "ClarificationRequired",
-      disqualify: "Disqualified",
+    if (bidderId) {
+      results = results.filter((entry) => entry.bidderId === bidderId)
     }
-    bidder.status = statusMap[body.action] ?? bidder.status
+
+    if (tenderId) {
+      results = results.filter((entry) => entry.tenderId === tenderId)
+    }
+
+    return mockDelay(results)
   }
-  return mockDelay({ success: true, bidderId: body.bidderId, action: body.action })
-}
+
+  if (path === "/bidders" && method === "GET") {
+    return mockDelay(mockBidders)
+  }
+
+  if (path === "/officer/decision" && method === "POST") {
+    const body = JSON.parse(options.body as string)
+    const bidder = mockBidders.find((b) => b.id === body.bidderId)
+
+    if (bidder) {
+      const statusMap: Record<string, string> = {
+        accept: "Recommended",
+        override: "Conditional",
+        escalate: "ClarificationRequired",
+        disqualify: "Disqualified",
+      }
+
+      bidder.status = statusMap[body.action] ?? bidder.status
+    }
+
+    return mockDelay({
+      success: true,
+      bidderId: body.bidderId,
+      action: body.action,
+    })
+  }
+
   if (path === "/rules" && method === "POST") {
     const body = JSON.parse(options.body as string)
-    const newRule = { id: String(Date.now()), status: "Draft", ...body }
+    const newRule = {
+      id: String(Date.now()),
+      status: "Draft",
+      ...body,
+    }
+
     mockRules = [...mockRules, newRule]
     return mockDelay(newRule)
   }
+
   if (path.startsWith("/rules/") && method === "DELETE") {
     const id = path.split("/")[2]
     mockRules = mockRules.filter((r) => r.id !== id)
+
     return mockDelay({ success: true })
   }
 
   if (path.startsWith("/debarment/search") && method === "GET") {
-  const url = new URL(`http://localhost${path}`)
-  const searchTerm = (url.searchParams.get("q") || "").toLowerCase().trim()
+    const url = new URL(`http://localhost${path}`)
+    const searchTerm = (url.searchParams.get("q") || "").toLowerCase().trim()
 
-  if (!searchTerm) {
-    return mockDelay([])
-  }
-
-  const results = mockDebarment.filter(
-    (item) =>
-      item.entityName.toLowerCase().includes(searchTerm) ||
-      item.pan.toLowerCase().includes(searchTerm) ||
-      item.gstin.toLowerCase().includes(searchTerm)
-  )
-
-  return mockDelay(results)
-}
-
-    const key = `${method} ${path}`
-    if (key in mockResponses) {
-      return mockDelay(mockResponses[key])
+    if (!searchTerm) {
+      return mockDelay([])
     }
-    console.warn(`No mock defined for ${key}, returning empty object`)
-    return mockDelay({})
+
+    const results = mockDebarment.filter(
+      (item) =>
+        item.entityName.toLowerCase().includes(searchTerm) ||
+        item.pan.toLowerCase().includes(searchTerm) ||
+        item.gstin.toLowerCase().includes(searchTerm)
+    )
+
+    return mockDelay(results)
   }
+
+  const key = `${method} ${path}`
+
+  if (key in mockResponses) {
+    return mockDelay(mockResponses[key])
+  }
+
+  console.warn(`No mock defined for ${key}, returning empty object`)
+  return mockDelay({})
+}
 
   const token = localStorage.getItem("access_token")
   const headers = new Headers(options.headers)

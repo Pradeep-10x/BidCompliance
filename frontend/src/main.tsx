@@ -10,6 +10,7 @@ import Login from './pages/login.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import DebarmentIndex from "./pages/DebarmentIndex.tsx"
 import AuditTrail from './pages/AuditTrail.tsx'
+import BidderDetail from './pages/BidderDetail.tsx'
 
 const queryClient = new QueryClient()
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
       <TooltipProvider>
         <BrowserRouter>
 <Routes>
+  <Route path="/bidders/:bidderId" element={<ProtectedRoute><BidderDetail /></ProtectedRoute>} />
   <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
   <Route path="/rules" element={<ProtectedRoute><RuleStudio /></ProtectedRoute>} />
   <Route path="/" element={<Login />} />

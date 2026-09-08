@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import * as React from "react"
 import {
@@ -284,13 +285,19 @@ const columns = columnHelper.columns([
     enableHiding: false,
   }),
 
-  columnHelper.accessor("name", {
-    header: "Bidder Name",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.name}</span>
-    ),
-    enableHiding: false,
-  }),
+
+columnHelper.accessor("name", {
+  header: "Bidder Name",
+  cell: ({ row }) => (
+    <Link
+      to={`/bidders/${row.original.id}`}
+      className="font-medium hover:underline"
+    >
+      {row.original.name}
+    </Link>
+  ),
+  enableHiding: false,
+}),
 
   columnHelper.accessor("gstin", {
     header: "GSTIN",
