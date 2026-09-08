@@ -8,6 +8,7 @@ from app.core.rbac import get_current_active_user
 from app.models.bid import Bid
 from app.models.user import User
 from app.schemas.bid import BidCreate, BidResponse, BidUpdate
+from app.schemas.compliance import BidComplianceSummaryResponse
 from app.schemas.evaluation import RequirementEvaluationResponse
 from app.services.bid_service import (
     DuplicateBidError,
@@ -20,9 +21,11 @@ from app.services.bid_service import (
 )
 from app.services.evaluation_service import (
     evaluate_bid_requirements,
+    get_bid_compliance_summary,
     get_bid_evaluation,
     list_bid_evaluations,
 )
+
 
 router = APIRouter()
 
@@ -150,4 +153,19 @@ async def get_evaluation(
 ):
     await require_tender(db, tender_id)
     return await get_bid_evaluation(db, tender_id, bid_id, requirement_id)
+
+
+@router.get(
+    "/{bid_id}/compliance-summary",
+    response_model=BidComplianceSummaryResponse,
+)
+async def get_compliance_summary(
+    tender_id: UUID,
+    bid_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    await require_tender(db, tender_id)
+    return await get_bid_compliance_summary(db, tender_id, bid_id)
+
 

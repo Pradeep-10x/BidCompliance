@@ -14,7 +14,13 @@ from app.models.evidence import Evidence
 from app.models.requirement import Requirement
 from app.models.requirement_evaluation import RequirementEvaluation
 from app.models.tender import Tender
+from app.schemas.compliance import (
+    BidComplianceSummaryResponse,
+    ComplianceSummaryStatus,
+    RequirementSummaryItem,
+)
 from app.schemas.evaluation import EvaluationResult, EvaluationStatus
+
 
 
 SUPPORTED_OPERATORS = {
@@ -558,3 +564,184 @@ async def get_bid_evaluation(
             detail="Evaluation not found for this requirement",
         )
     return record
+
+
+async def get_bid_compliance_summary(
+    db: AsyncSession, tender_id: UUID, bid_id: UUID
+) -> BidComplianceSummaryResponse:
+    """Deterministically aggregate requirement evaluations for a bid.
+
+    Enforces tender/bid scoping.
+    Preserves full provenance linking requirements to RequirementEvaluation and Evidence.
+    Does NOT mutate Bid.status, Requirement, or Evidence.
+    """
+    # 1. Scoping check: verify bid exists and belongs to tender
+    bid_stmt = select(Bid).where(Bid.id == bid_id, Bid.tender_id == tender_id)
+    bid_res = await db.execute(bid_stmt)
+    bid = bid_res.scalar_one_or_none()
+    if bid is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bid not found or does not belong to the specified tender",
+        )
+
+    # 2. Fetch all Requirements for tender in deterministic order
+    req_stmt = (
+        select(Requirement)
+        .where(Requirement.tender_id == tender_id)
+        .order_by(Requirement.created_at.asc(), Requirement.id.asc())
+    )
+    req_res = await db.execute(req_stmt)
+    requirements = list(req_res.scalars().all())
+
+    # 3. Fetch all persisted RequirementEvaluation records for bid
+    eval_stmt = (
+        select(RequirementEvaluation)
+        .where(
+            RequirementEvaluation.bid_id == bid_id,
+            RequirementEvaluation.tender_id == tender_id,
+        )
+    )
+    eval_res = await db.execute(eval_stmt)
+    evaluations = list(eval_res.scalars().all())
+    eval_map: dict[UUID, RequirementEvaluation] = {
+        ev.requirement_id: ev for ev in evaluations
+    }
+
+    # 4. Deterministic aggregation
+    total_requirements = len(requirements)
+    evaluated_requirements = 0
+    unevaluated_requirements = 0
+    compliant = 0
+    non_compliant = 0
+    missing_evidence = 0
+    low_confidence = 0
+    error = 0
+
+    mandatory_total = 0
+    mandatory_evaluated = 0
+    mandatory_compliant = 0
+    mandatory_non_compliant = 0
+
+    summary_items: list[RequirementSummaryItem] = []
+    total_weight = 0.0
+    compliant_weight = 0.0
+
+    for req in requirements:
+        weight_val = max(0.0, float(req.weight) if req.weight is not None else 1.0)
+        total_weight += weight_val
+
+        if req.is_mandatory:
+            mandatory_total += 1
+
+        ev = eval_map.get(req.id)
+        if ev is None:
+            unevaluated_requirements += 1
+            item = RequirementSummaryItem(
+                requirement_id=req.id,
+                title=req.title,
+                is_mandatory=req.is_mandatory,
+                weight=float(req.weight) if req.weight is not None else 1.0,
+                evaluation_id=None,
+                status="UNEVALUATED",
+                target_field=None,
+                extracted_value=None,
+                confidence=None,
+                evidence_id=None,
+                reason="Requirement has not been evaluated yet for this bid",
+                details=None,
+            )
+        else:
+            evaluated_requirements += 1
+            if req.is_mandatory:
+                mandatory_evaluated += 1
+
+            if ev.status == EvaluationStatus.COMPLIANT:
+                compliant += 1
+                compliant_weight += weight_val
+                if req.is_mandatory:
+                    mandatory_compliant += 1
+            elif ev.status == EvaluationStatus.NON_COMPLIANT:
+                non_compliant += 1
+                if req.is_mandatory:
+                    mandatory_non_compliant += 1
+            elif ev.status == EvaluationStatus.MISSING_EVIDENCE:
+                missing_evidence += 1
+                if req.is_mandatory:
+                    mandatory_non_compliant += 1
+            elif ev.status == EvaluationStatus.LOW_CONFIDENCE:
+                low_confidence += 1
+                if req.is_mandatory:
+                    mandatory_non_compliant += 1
+            elif ev.status == EvaluationStatus.ERROR:
+                error += 1
+                if req.is_mandatory:
+                    mandatory_non_compliant += 1
+            else:
+                non_compliant += 1
+                if req.is_mandatory:
+                    mandatory_non_compliant += 1
+
+            item = RequirementSummaryItem(
+                requirement_id=req.id,
+                title=req.title,
+                is_mandatory=req.is_mandatory,
+                weight=float(req.weight) if req.weight is not None else 1.0,
+                evaluation_id=ev.id,
+                status=ev.status,
+                target_field=ev.target_field,
+                extracted_value=ev.extracted_value,
+                confidence=ev.confidence,
+                evidence_id=ev.evidence_id,
+                reason=ev.reason,
+                details=ev.details,
+            )
+        summary_items.append(item)
+
+    # 5. Ratios
+    if total_requirements == 0:
+        compliance_ratio = 1.0
+        weighted_compliance_ratio = 1.0
+    else:
+        compliance_ratio = round(compliant / total_requirements, 4)
+        if total_weight <= 0.0:
+            weighted_compliance_ratio = compliance_ratio
+        else:
+            weighted_compliance_ratio = round(compliant_weight / total_weight, 4)
+
+    # 6. Neutral Summary Status
+    if error > 0:
+        summary_status = ComplianceSummaryStatus.ERROR
+    elif unevaluated_requirements > 0:
+        summary_status = ComplianceSummaryStatus.INCOMPLETE
+    elif (
+        mandatory_compliant < mandatory_total
+        or non_compliant > 0
+        or missing_evidence > 0
+        or low_confidence > 0
+    ):
+        summary_status = ComplianceSummaryStatus.REVIEW_REQUIRED
+    else:
+        summary_status = ComplianceSummaryStatus.READY_FOR_REVIEW
+
+    return BidComplianceSummaryResponse(
+        bid_id=bid_id,
+        tender_id=tender_id,
+        total_requirements=total_requirements,
+        evaluated_requirements=evaluated_requirements,
+        unevaluated_requirements=unevaluated_requirements,
+        compliant=compliant,
+        non_compliant=non_compliant,
+        missing_evidence=missing_evidence,
+        low_confidence=low_confidence,
+        error=error,
+        mandatory_total=mandatory_total,
+        mandatory_evaluated=mandatory_evaluated,
+        mandatory_compliant=mandatory_compliant,
+        mandatory_non_compliant=mandatory_non_compliant,
+        summary_status=summary_status,
+        compliance_ratio=compliance_ratio,
+        weighted_compliance_ratio=weighted_compliance_ratio,
+        requirements=summary_items,
+    )
+
