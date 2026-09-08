@@ -81,6 +81,9 @@ const mockAuditEntries = [
     bidderName: "Alton Plastic Pvt Ltd",
     tenderId: "TND-001",
     tenderName: "Refinery Equipment Supply",
+    eventHash: "a91f7c2e8d1045b6",
+    previousHash: "GENESIS",
+    integrityStatus: "VERIFIED",
   },
   {
     id: 2,
@@ -94,6 +97,9 @@ const mockAuditEntries = [
     bidderName: "MS Corporation",
     tenderId: "TND-001",
     tenderName: "Refinery Equipment Supply",
+      eventHash: "b42d91e7c3a85f10",
+  previousHash: "a91f7c2e8d1045b6",
+  integrityStatus: "VERIFIED",
   },
   {
     id: 3,
@@ -107,6 +113,9 @@ const mockAuditEntries = [
     bidderName: "MS Corporation",
     tenderId: "TND-001",
     tenderName: "Refinery Equipment Supply",
+    eventHash: "c73a52f1d8b94e21",
+previousHash: "b42d91e7c3a85f10",
+integrityStatus: "VERIFIED",
   },
   {
     id: 4,
@@ -120,6 +129,9 @@ const mockAuditEntries = [
     bidderName: "Sunrise Traders",
     tenderId: "TND-002",
     tenderName: "IT Infrastructure Upgrade",
+    eventHash: "d18e64b9a2f73c50",
+previousHash: "c73a52f1d8b94e21",
+integrityStatus: "VERIFIED",
   },
   {
     id: 5,
@@ -133,6 +145,9 @@ const mockAuditEntries = [
     bidderName: "Kaveri Engineering Works",
     tenderId: "TND-003",
     tenderName: "Pipeline Maintenance",
+    eventHash: "e95b27c4f6a81d32",
+previousHash: "d18e64b9a2f73c50",
+integrityStatus: "VERIFIED",
   },
 ]
 
