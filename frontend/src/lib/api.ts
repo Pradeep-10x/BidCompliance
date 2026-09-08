@@ -1,6 +1,7 @@
 const BASE_URL = "http://10.227.227.239:8000/api/v1"
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
+
 let mockRules = [
   { id: "1", tenderName: "Refinery Equipment Supply", requirementType: "Turnover Threshold", value: "₹50,00,000", status: "Active" },
   { id: "2", tenderName: "IT Infrastructure Upgrade", requirementType: "MSE Preference", value: "20%", status: "Active" },
@@ -15,11 +16,71 @@ let mockBidders = [
 ]
 
 const mockAuditEntries = [
-  { id: 1, timestamp: "2026-09-05T09:12:00Z", actionType: "Verification", description: "GSTIN verified — Alton Plastic Pvt Ltd", ruleVersion: "v1.2", actor: "System", evidenceRef: "ev-001" },
-  { id: 2, timestamp: "2026-09-05T09:14:00Z", actionType: "Verification", description: "PAN cross-check failed — MS Corporation", ruleVersion: "v1.2", actor: "System", evidenceRef: "ev-002" },
-  { id: 3, timestamp: "2026-09-05T10:02:00Z", actionType: "Officer Decision", description: "Clarification requested — MS Corporation", ruleVersion: "v1.2", actor: "Officer R. Sharma", evidenceRef: "ev-002" },
-  { id: 4, timestamp: "2026-09-06T11:30:00Z", actionType: "Officer Decision", description: "Override applied — turnover mismatch waived", ruleVersion: "v1.3", actor: "Officer R. Sharma", evidenceRef: "ev-004" },
-  { id: 5, timestamp: "2026-09-06T14:45:00Z", actionType: "Verification", description: "Debarment check — no match found — Kaveri Engineering Works", ruleVersion: "v1.3", actor: "System", evidenceRef: "ev-005" },
+  {
+    id: 1,
+    timestamp: "2026-09-05T09:12:00Z",
+    actionType: "Verification",
+    description: "GSTIN verified — Alton Plastic Pvt Ltd",
+    ruleVersion: "v1.2",
+    actor: "System",
+    evidenceRef: "ev-001",
+    bidderId: "1",
+    bidderName: "Alton Plastic Pvt Ltd",
+    tenderId: "TND-001",
+    tenderName: "Refinery Equipment Supply",
+  },
+  {
+    id: 2,
+    timestamp: "2026-09-05T09:14:00Z",
+    actionType: "Verification",
+    description: "PAN cross-check failed — MS Corporation",
+    ruleVersion: "v1.2",
+    actor: "System",
+    evidenceRef: "ev-002",
+    bidderId: "2",
+    bidderName: "MS Corporation",
+    tenderId: "TND-001",
+    tenderName: "Refinery Equipment Supply",
+  },
+  {
+    id: 3,
+    timestamp: "2026-09-05T10:02:00Z",
+    actionType: "Officer Decision",
+    description: "Clarification requested — MS Corporation",
+    ruleVersion: "v1.2",
+    actor: "Officer R. Sharma",
+    evidenceRef: "ev-002",
+    bidderId: "2",
+    bidderName: "MS Corporation",
+    tenderId: "TND-001",
+    tenderName: "Refinery Equipment Supply",
+  },
+  {
+    id: 4,
+    timestamp: "2026-09-06T11:30:00Z",
+    actionType: "Officer Decision",
+    description: "Override applied — turnover mismatch waived",
+    ruleVersion: "v1.3",
+    actor: "Officer R. Sharma",
+    evidenceRef: "ev-004",
+    bidderId: "3",
+    bidderName: "Sunrise Traders",
+    tenderId: "TND-002",
+    tenderName: "IT Infrastructure Upgrade",
+  },
+  {
+    id: 5,
+    timestamp: "2026-09-06T14:45:00Z",
+    actionType: "Verification",
+    description: "Debarment check — no match found — Kaveri Engineering Works",
+    ruleVersion: "v1.3",
+    actor: "System",
+    evidenceRef: "ev-005",
+    bidderId: "4",
+    bidderName: "Kaveri Engineering Works",
+    tenderId: "TND-003",
+    tenderName: "Pipeline Maintenance",
+  },
 ]
 
 const mockDebarment = [
@@ -89,11 +150,7 @@ const mockResponses: Record<string, unknown> = {
     role: "OFFICER",
     is_active: true,
   },
-  "GET /bidders": [
-    { id: "1", name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
-    { id: "2", name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired" },
-    { id: "3", name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
-  ],
+
 }
 
 function mockDelay<T>(data: T, ms = 400): Promise<T> {
@@ -108,8 +165,23 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       if (path === "/rules" && method === "GET") {
     return mockDelay(mockRules)
   }
-  if (path === "/audit" && method === "GET") {
-  return mockDelay(mockAuditEntries)
+  if (path.startsWith("/audit") && method === "GET") {
+  const url = new URL(`http://localhost${path}`)
+
+  const bidderId = url.searchParams.get("bidderId")
+  const tenderId = url.searchParams.get("tenderId")
+
+  let results = [...mockAuditEntries]
+
+  if (bidderId) {
+    results = results.filter((entry) => entry.bidderId === bidderId)
+  }
+
+  if (tenderId) {
+    results = results.filter((entry) => entry.tenderId === tenderId)
+  }
+
+  return mockDelay(results)
 }
   if (path === "/bidders" && method === "GET") {
   return mockDelay(mockBidders)
