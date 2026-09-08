@@ -2,6 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/api"
 import * as React from "react"
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import {
   closestCenter,
   DndContext,
   KeyboardSensor,
@@ -41,7 +49,7 @@ import {
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
-import { Button as UiButton } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
@@ -81,6 +89,7 @@ import {
   EllipsisVerticalIcon,
   Columns3Icon,
   ChevronDownIcon,
+  PlusIcon,
   ChevronsLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -123,7 +132,7 @@ function DragHandle({ id }: { id: number }) {
   })
 
   return (
-    <UiButton
+    <Button
       {...attributes}
       {...listeners}
       variant="ghost"
@@ -132,61 +141,110 @@ function DragHandle({ id }: { id: number }) {
     >
       <GripVerticalIcon className="size-3 text-muted-foreground" />
       <span className="sr-only">Drag to reorder</span>
-    </UiButton>
+    </Button>
   )
 }
 
 // Actions for each bidder.
 function RowActions({ bidderId }: { bidderId: number }) {
   const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [pendingAction, setPendingAction] = React.useState<string | null>(null)
+  const [reason, setReason] = React.useState("")
 
   const decide = useMutation({
-    mutationFn: (action: string) =>
+    mutationFn: ({ action, reason }: { action: string; reason?: string }) =>
       apiFetch("/officer/decision", {
         method: "POST",
-        body: JSON.stringify({ bidderId, action }),
+        body: JSON.stringify({ bidderId, action, reason }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bidders"] })
+      setDialogOpen(false)
+      setReason("")
+      setPendingAction(null)
     },
   })
 
+  function openReasonDialog(action: string) {
+    setPendingAction(action)
+    setDialogOpen(true)
+  }
+
+  function confirmAction() {
+    if (!pendingAction) return
+    decide.mutate({ action: pendingAction, reason })
+  }
+
+  const actionLabels: Record<string, string> = {
+    override: "Override",
+    escalate: "Escalate / Request Clarification",
+    disqualify: "Disqualify",
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <UiButton
-          variant="ghost"
-          className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-          size="icon"
-        >
-          <EllipsisVerticalIcon />
-          <span className="sr-only">Open menu</span>
-        </UiButton>
-      </DropdownMenuTrigger>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            size="icon"
+          >
+            <EllipsisVerticalIcon />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => decide.mutate({ action: "accept" })}>
+            Accept
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openReasonDialog("override")}>
+            Override
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openReasonDialog("escalate")}>
+            Escalate / Clarify
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => openReasonDialog("disqualify")}
+          >
+            Disqualify
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={() => decide.mutate("accept")}>
-          Accept
-        </DropdownMenuItem>
-
-        <DropdownMenuItem onClick={() => decide.mutate("override")}>
-          Override
-        </DropdownMenuItem>
-
-        <DropdownMenuItem onClick={() => decide.mutate("escalate")}>
-          Escalate / Clarify
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() => decide.mutate("disqualify")}
-        >
-          Disqualify
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {pendingAction ? actionLabels[pendingAction] : ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reason">Reason</Label>
+            <Textarea
+              id="reason"
+              placeholder="Explain the basis for this decision — this will be recorded in the audit trail."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmAction}
+              disabled={!reason.trim() || decide.isPending}
+            >
+              {decide.isPending ? "Saving..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -471,11 +529,11 @@ export function DataTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <UiButton variant="outline" size="sm">
+              <Button variant="outline" size="sm">
                 <Columns3Icon data-icon="inline-start" />
                 Columns
                 <ChevronDownIcon data-icon="inline-end" />
-              </UiButton>
+              </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
@@ -506,6 +564,12 @@ export function DataTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Button variant="outline" size="sm">
+            <PlusIcon />
+            <span className="hidden lg:inline">
+              Add Section
+            </span>
+          </Button>
         </div>
       </div>
 
@@ -623,7 +687,7 @@ export function DataTable({
             </div>
 
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <UiButton
+              <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
@@ -633,9 +697,9 @@ export function DataTable({
                   Go to first page
                 </span>
                 <ChevronsLeftIcon />
-              </UiButton>
+              </Button>
 
-              <UiButton
+              <Button
                 variant="outline"
                 className="size-8"
                 size="icon"
@@ -646,9 +710,9 @@ export function DataTable({
                   Go to previous page
                 </span>
                 <ChevronLeftIcon />
-              </UiButton>
+              </Button>
 
-              <UiButton
+              <Button
                 variant="outline"
                 className="size-8"
                 size="icon"
@@ -659,9 +723,9 @@ export function DataTable({
                   Go to next page
                 </span>
                 <ChevronRightIcon />
-              </UiButton>
+              </Button>
 
-              <UiButton
+              <Button
                 variant="outline"
                 className="hidden size-8 lg:flex"
                 size="icon"
@@ -676,7 +740,7 @@ export function DataTable({
                   Go to last page
                 </span>
                 <ChevronsRightIcon />
-              </UiButton>
+              </Button>
             </div>
           </div>
         </div>

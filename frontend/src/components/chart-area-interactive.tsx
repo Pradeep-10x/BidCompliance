@@ -35,16 +35,45 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Splits a long name into up to 2 lines, breaking on a space closest to the middle
+function wrapName(name: string): string[] {
+  if (name.length <= 14) return [name]
+  const words = name.split(" ")
+  let line1 = ""
+  let line2 = ""
+  for (const word of words) {
+    if ((line1 + " " + word).trim().length <= 14) {
+      line1 = (line1 + " " + word).trim()
+    } else {
+      line2 = (line2 + " " + word).trim()
+    }
+  }
+  return line2 ? [line1, line2] : [line1]
+}
+
+// Custom tick renderer — draws each line as a separate horizontal <tspan>, no rotation
+function CustomXAxisTick({ x, y, payload }: any) {
+  const lines = wrapName(payload.value)
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text textAnchor="middle" fontSize={11} fill="var(--muted-foreground)">
+        {lines.map((line, i) => (
+          <tspan key={i} x={0} dy={i === 0 ? 14 : 14}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  )
+}
+
 export function ChartAreaInteractive({
   bidders = [],
 }: {
   bidders?: Bidder[]
 }) {
   const chartData = bidders.map((bidder) => ({
-    name:
-      bidder.name.length > 18
-        ? `${bidder.name.slice(0, 18)}…`
-        : bidder.name,
+    name: bidder.name,
     complianceScore: bidder.complianceScore,
     verificationDepth: bidder.verificationDepth,
   }))
@@ -53,7 +82,6 @@ export function ChartAreaInteractive({
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Bidder Compliance Overview</CardTitle>
-
         <CardDescription>
           Compliance score compared with verification depth
         </CardDescription>
@@ -62,7 +90,7 @@ export function ChartAreaInteractive({
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="h-[300px] w-full"
+          className="h-[320px] w-full"
         >
           <BarChart
             accessibilityLayer
@@ -80,11 +108,9 @@ export function ChartAreaInteractive({
               dataKey="name"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
               interval={0}
-              angle={-15}
-              textAnchor="end"
-              height={60}
+              height={50}
+              tick={<CustomXAxisTick />}
             />
 
             <YAxis

@@ -8,10 +8,11 @@ import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 function App() {
-  const { data: bidders } = useQuery({
+  const { data: bidders, error, isError, isSuccess } = useQuery({
     queryKey: ["bidders"],
     queryFn: () => apiFetch("/bidders"),
   })
+
 
   return (
     <SidebarProvider
@@ -28,9 +29,9 @@ function App() {
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <SectionCards bidders={bidders ?? []} />
+              <SectionCards bidders = {bidders ?? []}/>
               <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
+                <ChartAreaInteractive bidders ={bidders ?? []} />
               </div>
               <DataTable data={bidders ?? []} />
             </div>
