@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ArrowLeftIcon } from "lucide-react"
+import { ArrowLeftIcon, PrinterIcon } from "lucide-react"
 
 type Finding = {
   id: string
@@ -32,12 +32,18 @@ export default function BidderDetail() {
 
   return (
     <div className="p-6 space-y-4">
-      <Link to="/dashboard">
-        <Button variant="ghost" size="sm">
-          <ArrowLeftIcon className="size-4" />
-          Back to Bidder Queue
+      <div className="flex items-center justify-between print:hidden">
+        <Link to="/dashboard">
+          <Button variant="ghost" size="sm">
+            <ArrowLeftIcon className="size-4" />
+            Back to Bidder Queue
+          </Button>
+        </Link>
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <PrinterIcon className="size-4" />
+          Print Dossier
         </Button>
-      </Link>
+      </div>
 
       <div>
         <h1 className="text-2xl font-semibold">Bidder Findings</h1>
