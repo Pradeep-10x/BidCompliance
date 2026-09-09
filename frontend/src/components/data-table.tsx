@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import * as React from "react"
+import { checkDebarment } from "@/lib/api"
+import { ShieldAlertIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -288,14 +290,20 @@ const columns = columnHelper.columns([
 
 columnHelper.accessor("name", {
   header: "Bidder Name",
-  cell: ({ row }) => (
-    <Link
-      to={`/bidders/${row.original.id}`}
-      className="font-medium hover:underline"
-    >
-      {row.original.name}
-    </Link>
-  ),
+  cell: ({ row }) => {
+    const debarred = checkDebarment(row.original.name, row.original.gstin)
+    return (
+      <Link
+        to={`/bidders/${row.original.id}`}
+        className="font-medium hover:underline flex items-center gap-1.5"
+      >
+        {row.original.name}
+        {debarred && (
+          <ShieldAlertIcon className="size-3.5 text-destructive shrink-0" />
+        )}
+      </Link>
+    )
+  },
   enableHiding: false,
 }),
 

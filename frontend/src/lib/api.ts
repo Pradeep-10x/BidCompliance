@@ -32,7 +32,7 @@ let mockRules = [
   },
 ]
 
-function checkDebarment(bidderName: string, gstin: string) {
+export function checkDebarment(bidderName: string, gstin: string) {
   return mockDebarment.find(
     (d) =>
       d.status === "Active" &&
@@ -64,6 +64,10 @@ const mockUsers = [
   { id: "u3", name: "K. Iyer", email: "auditor@example.com", role: "AUDITOR", status: "Active" },
 ]
 
+const mockRelationships = [
+  { bidderA: "MS Corporation", bidderB: "Sunrise Traders", sharedAttribute: "Registered Address", detail: "Both list 10, Veer Nariman Road, Fort" },
+]
+
 const mockFindings: Record<number, Array<{
   id: string
   requirement: string
@@ -93,7 +97,7 @@ function getFindings(bidderId: number) {
   ]
 }
 
-const mockAuditEntries = [
+let mockAuditEntries = [
   {
     id: 1,
     timestamp: "2026-09-05T09:12:00Z",
@@ -264,6 +268,10 @@ if (USE_MOCK) {
   if (path === "/tenders" && method === "GET") {
   return mockDelay(mockTenders)
 }
+
+if (path === "/relationships" && method === "GET") {
+  return mockDelay(mockRelationships)
+}
 if (path.match(/^\/bidders\/\d+\/debarment-check$/) && method === "GET") {
   const bidderId = Number(path.split("/")[2])
   const bidder = mockBidders.find((b) => b.id === bidderId)
@@ -311,27 +319,41 @@ if (path === "/admin/users" && method === "GET") {
   return mockDelay(results)
 }
 
-  if (path === "/officer/decision" && method === "POST") {
-    const body = JSON.parse(options.body as string)
-    const bidder = mockBidders.find((b) => b.id === body.bidderId)
+if (path === "/officer/decision" && method === "POST") {
+  const body = JSON.parse(options.body as string)
+  const bidder = mockBidders.find((b) => b.id === body.bidderId)
 
-    if (bidder) {
-      const statusMap: Record<string, string> = {
-        accept: "Recommended",
-        override: "Conditional",
-        escalate: "ClarificationRequired",
-        disqualify: "Disqualified",
-      }
-
-      bidder.status = statusMap[body.action] ?? bidder.status
+  if (bidder) {
+    const statusMap: Record<string, string> = {
+      accept: "Recommended",
+      override: "Conditional",
+      escalate: "ClarificationRequired",
+      disqualify: "Disqualified",
     }
+    bidder.status = statusMap[body.action] ?? bidder.status
 
-    return mockDelay({
-      success: true,
-      bidderId: body.bidderId,
-      action: body.action,
-    })
+    const lastEntry = mockAuditEntries[mockAuditEntries.length - 1]
+    const newEntry = {
+      id: mockAuditEntries.length + 1,
+      timestamp: new Date().toISOString(),
+      actionType: "Officer Decision",
+      description: `${body.action.charAt(0).toUpperCase() + body.action.slice(1)} applied — ${bidder.name}${body.reason ? `: ${body.reason}` : ""}`,
+      ruleVersion: "v1.0",
+      actor: "Officer (You)",
+      evidenceRef: `ev-${bidder.id}-${Date.now()}`,
+      bidderId: String(bidder.id),
+      bidderName: bidder.name,
+      tenderId: bidder.tenderId ?? "N/A",
+      tenderName: "—",
+      eventHash: Math.random().toString(16).slice(2, 18),
+      previousHash: lastEntry?.eventHash ?? "GENESIS",
+      integrityStatus: "VERIFIED" as const,
+    }
+    mockAuditEntries.push(newEntry)
   }
+
+  return mockDelay({ success: true, bidderId: body.bidderId, action: body.action, reason: body.reason })
+}
 
 if (path === "/rules" && method === "POST") {
   const body = JSON.parse(options.body as string || "{}")

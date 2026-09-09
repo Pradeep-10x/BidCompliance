@@ -15,6 +15,7 @@ import Tenders from './pages/Tenders.tsx'
 import Notifications from './pages/Notifications.tsx'
 import Dossiers from './pages/Dossiers.tsx'
 import Admin from './pages/Admin.tsx'
+import RelationshipGraph from './pages/RelationshipGraph.tsx'
 
 const queryClient = new QueryClient()
 
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')!).render(
       <TooltipProvider>
         <BrowserRouter>
 <Routes>
+  <Route path="/relationships" element={<ProtectedRoute><RelationshipGraph /></ProtectedRoute>} />
   <Route path="/tenders" element={<ProtectedRoute><Tenders /></ProtectedRoute>} />
 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 <Route path="/dossiers" element={<ProtectedRoute><Dossiers /></ProtectedRoute>} />

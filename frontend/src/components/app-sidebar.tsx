@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
-
+import { LinkIcon } from "lucide-react"
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -39,6 +39,7 @@ const data = {
     { title: "Audit Trail", url: "/audit", icon: <ChartBarIcon /> },
     { title: "Debarment Index", url: "/debarment", icon: <FolderIcon /> },
     { title: "Notifications", url: "/notifications", icon: <BellIcon /> },
+    { title: "Relationship Graph", url: "/relationships", icon: <LinkIcon /> },
   ],
   navSecondary: [
     { title: "Admin", url: "/admin", icon: <ShieldIcon /> },
