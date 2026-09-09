@@ -39,6 +39,24 @@ const mockBidders = [
   { id: 5, name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified" },
 ]
 
+const mockTenders = [
+  { id: "TND-001", name: "Refinery Equipment Supply", bidderCount: 2, activeRules: 1, status: "Open" },
+  { id: "TND-002", name: "IT Infrastructure Upgrade", bidderCount: 1, activeRules: 1, status: "Open" },
+  { id: "TND-003", name: "Pipeline Maintenance", bidderCount: 1, activeRules: 1, status: "Draft" },
+]
+
+const mockNotifications = [
+  { id: "n1", title: "Clarification pending", description: "MS Corporation — awaiting response for 3 days", severity: "high" },
+  { id: "n2", title: "Conditional review pending", description: "Sunrise Traders — conditional approval needs officer sign-off", severity: "medium" },
+  { id: "n3", title: "Rule draft awaiting activation", description: "Pipeline Maintenance — Local Content rule still in Draft", severity: "low" },
+]
+
+const mockUsers = [
+  { id: "u1", name: "R. Sharma", email: "officer@example.com", role: "OFFICER", status: "Active" },
+  { id: "u2", name: "A. Verma", email: "admin@example.com", role: "ADMIN", status: "Active" },
+  { id: "u3", name: "K. Iyer", email: "auditor@example.com", role: "AUDITOR", status: "Active" },
+]
+
 const mockFindings: Record<number, Array<{
   id: string
   requirement: string
@@ -235,6 +253,16 @@ if (USE_MOCK) {
   if (path === "/rules" && method === "GET") {
     return mockDelay(mockRules)
   }
+
+  if (path === "/tenders" && method === "GET") {
+  return mockDelay(mockTenders)
+}
+if (path === "/notifications" && method === "GET") {
+  return mockDelay(mockNotifications)
+}
+if (path === "/admin/users" && method === "GET") {
+  return mockDelay(mockUsers)
+}
 
   if (path.match(/^\/bidders\/\d+\/findings$/) && method === "GET") {
     const bidderId = Number(path.split("/")[2])

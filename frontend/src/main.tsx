@@ -11,6 +11,10 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import DebarmentIndex from "./pages/DebarmentIndex.tsx"
 import AuditTrail from './pages/AuditTrail.tsx'
 import BidderDetail from './pages/BidderDetail.tsx'
+import Tenders from './pages/Tenders.tsx'
+import Notifications from './pages/Notifications.tsx'
+import Dossiers from './pages/Dossiers.tsx'
+import Admin from './pages/Admin.tsx'
 
 const queryClient = new QueryClient()
 
@@ -20,6 +24,10 @@ createRoot(document.getElementById('root')!).render(
       <TooltipProvider>
         <BrowserRouter>
 <Routes>
+  <Route path="/tenders" element={<ProtectedRoute><Tenders /></ProtectedRoute>} />
+<Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+<Route path="/dossiers" element={<ProtectedRoute><Dossiers /></ProtectedRoute>} />
+<Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
   <Route path="/bidders/:bidderId" element={<ProtectedRoute><BidderDetail /></ProtectedRoute>} />
   <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
   <Route path="/rules" element={<ProtectedRoute><RuleStudio /></ProtectedRoute>} />
