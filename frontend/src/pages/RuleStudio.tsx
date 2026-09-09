@@ -39,6 +39,7 @@ type Rule = {
   value: string
   version: string
   status: string
+  ruleType: "GATE" | "WEIGHTED"
 }
 type Bidder = {
   id: number
@@ -65,6 +66,7 @@ const ruleSchema = z.object({
   tenderName: z.string().min(2, "Required"),
   requirementType: z.string().min(2, "Required"),
   value: z.string().min(1, "Required"),
+  ruleType: z.enum(["GATE", "WEIGHTED"]),
 })
 
 export default function RuleStudio() {
@@ -136,11 +138,12 @@ const { data: bidders } = useQuery<Bidder[]>({
 
   const form = useForm<z.infer<typeof ruleSchema>>({
     resolver: zodResolver(ruleSchema),
-    defaultValues: {
-      tenderName: "",
-      requirementType: "",
-      value: "",
-    },
+defaultValues: {
+  tenderName: "",
+  requirementType: "",
+  value: "",
+  ruleType: "GATE",
+},
   })
 
   return (
@@ -206,21 +209,41 @@ const { data: bidders } = useQuery<Bidder[]>({
                 />
 
                 <FormField
-                  control={form.control}
-                  name="value"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Value</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. ₹50,00,000 or 20%"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="ruleType"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Rule Type</FormLabel>
+
+      <div className="grid grid-cols-2 gap-2">
+        <UiButton
+  type="button"
+  variant={field.value === "GATE" ? "default" : "outline"}
+  onClick={() => field.onChange("GATE")}
+>
+  Mandatory Gate
+</UiButton>
+
+    <UiButton
+  type="button"
+  variant={field.value === "WEIGHTED" ? "default" : "outline"}
+  onClick={() => field.onChange("WEIGHTED")}
+>
+  Weighted Criterion
+</UiButton>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Gates are blocking requirements. Weighted criteria contribute to
+        the compliance score.
+      </p>
+
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+
 
                 <UiButton
                   type="submit"
@@ -386,6 +409,7 @@ const { data: bidders } = useQuery<Bidder[]>({
           <TableRow>
             <TableHead>Tender Name</TableHead>
             <TableHead>Requirement Type</TableHead>
+            <TableHead>Rule Type</TableHead>
             <TableHead>Value</TableHead>
             <TableHead>Version</TableHead>
             <TableHead>Status</TableHead>
@@ -397,7 +421,7 @@ const { data: bidders } = useQuery<Bidder[]>({
           {isLoading && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center text-muted-foreground"
               >
                 Loading rules...
@@ -408,7 +432,7 @@ const { data: bidders } = useQuery<Bidder[]>({
           {!isLoading && rules?.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center text-muted-foreground"
               >
                 No rules found.
@@ -421,6 +445,15 @@ const { data: bidders } = useQuery<Bidder[]>({
               <TableCell>{rule.tenderName}</TableCell>
 
               <TableCell>{rule.requirementType}</TableCell>
+              <TableCell>
+  <Badge
+    variant={rule.ruleType === "GATE" ? "destructive" : "secondary"}
+  >
+    {rule.ruleType === "GATE"
+      ? "Mandatory Gate"
+      : "Weighted"}
+  </Badge>
+</TableCell>
 
               <TableCell>{rule.value}</TableCell>
 
