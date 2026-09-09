@@ -32,17 +32,16 @@ let mockRules = [
   },
 ]
 const mockBidders = [
-  { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended" },
-  { id: 2, name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired" },
-  { id: 3, name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional" },
-  { id: 4, name: "Kaveri Engineering Works", gstin: "05ABNTY3290P8ZE", complianceScore: 95, verificationDepth: 91, riskLevel: "Low", status: "Recommended" },
-  { id: 5, name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified" },
+  { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended", tenderId: "TND-001" },
+  { id: 2, name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired", tenderId: "TND-001" },
+  { id: 3, name: "Sunrise Traders", gstin: "05ABNTY3290P8ZD", complianceScore: 78, verificationDepth: 70, riskLevel: "Medium", status: "Conditional", tenderId: "TND-002" },
+  { id: 4, name: "Kaveri Engineering Works", gstin: "05ABNTY3290P8ZE", complianceScore: 95, verificationDepth: 91, riskLevel: "Low", status: "Recommended", tenderId: "TND-003" },
+  { id: 5, name: "Deccan Industrial Supplies", gstin: "05ABNTY3290P8ZF", complianceScore: 45, verificationDepth: 38, riskLevel: "Critical", status: "Disqualified", tenderId: "TND-003" },
 ]
-
 const mockTenders = [
   { id: "TND-001", name: "Refinery Equipment Supply", bidderCount: 2, activeRules: 1, status: "Open" },
   { id: "TND-002", name: "IT Infrastructure Upgrade", bidderCount: 1, activeRules: 1, status: "Open" },
-  { id: "TND-003", name: "Pipeline Maintenance", bidderCount: 1, activeRules: 1, status: "Draft" },
+  { id: "TND-003", name: "Pipeline Maintenance", bidderCount: 2, activeRules: 1, status: "Draft" },
 ]
 
 const mockNotifications = [
@@ -288,9 +287,14 @@ if (path === "/admin/users" && method === "GET") {
     return mockDelay(results)
   }
 
-  if (path === "/bidders" && method === "GET") {
-    return mockDelay(mockBidders)
-  }
+ if (path.startsWith("/bidders") && method === "GET" && !path.match(/^\/bidders\/\d+/)) {
+  const url = new URL(`http://localhost${path}`)
+  const tenderId = url.searchParams.get("tenderId")
+  const results = tenderId
+    ? mockBidders.filter((b) => b.tenderId === tenderId)
+    : mockBidders
+  return mockDelay(results)
+}
 
   if (path === "/officer/decision" && method === "POST") {
     const body = JSON.parse(options.body as string)

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -34,7 +35,11 @@ export default function Tenders() {
           )}
           {tenders?.map((t) => (
             <TableRow key={t.id}>
-              <TableCell className="font-medium">{t.name}</TableCell>
+              <TableCell className="font-medium">
+                <Link to={`/dashboard?tenderId=${t.id}`} className="hover:underline">
+                  {t.name}
+                </Link>
+              </TableCell>
               <TableCell>{t.bidderCount}</TableCell>
               <TableCell>{t.activeRules}</TableCell>
               <TableCell>
