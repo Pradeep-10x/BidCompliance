@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ArrowLeftIcon, PrinterIcon } from "lucide-react"
+import { ArrowLeftIcon, PrinterIcon, ShieldAlertIcon } from "lucide-react"
 
 type Finding = {
   id: string
@@ -22,12 +22,25 @@ type Finding = {
   evidenceRef: string
 }
 
+type DebarmentMatch = {
+  entityName: string
+  sourceList: string
+  debarmentStart: string
+  debarmentEnd: string
+  matchConfidence: number
+} | null
+
 export default function BidderDetail() {
   const { bidderId } = useParams()
 
   const { data: findings, isLoading } = useQuery<Finding[]>({
     queryKey: ["bidder-findings", bidderId],
     queryFn: () => apiFetch(`/bidders/${bidderId}/findings`),
+  })
+
+  const { data: debarmentMatch } = useQuery<DebarmentMatch>({
+    queryKey: ["bidder-debarment", bidderId],
+    queryFn: () => apiFetch(`/bidders/${bidderId}/debarment-check`),
   })
 
   return (
@@ -51,6 +64,22 @@ export default function BidderDetail() {
           Requirement-level verification results for this bidder
         </p>
       </div>
+
+      {debarmentMatch && (
+        <div className="rounded-lg border border-destructive bg-destructive/5 p-4 flex items-start gap-3">
+          <ShieldAlertIcon className="size-5 text-destructive shrink-0 mt-0.5" />
+          <div>
+            <div className="font-medium text-destructive">
+              Active Debarment Match Found
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              This bidder matches an active entry on the <strong>{debarmentMatch.sourceList}</strong> debarment
+              list ({debarmentMatch.debarmentStart} – {debarmentMatch.debarmentEnd}, {debarmentMatch.matchConfidence}%
+              confidence). Review before proceeding with qualification.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Table>
         <TableHeader>

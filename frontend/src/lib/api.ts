@@ -31,6 +31,14 @@ let mockRules = [
     status: "Draft",
   },
 ]
+
+function checkDebarment(bidderName: string, gstin: string) {
+  return mockDebarment.find(
+    (d) =>
+      d.status === "Active" &&
+      (d.entityName.toLowerCase() === bidderName.toLowerCase() || d.gstin === gstin)
+  )
+}
 const mockBidders = [
   { id: 1, name: "Alton Plastic Pvt Ltd", gstin: "05ABNTY3290P8ZB", complianceScore: 92, verificationDepth: 88, riskLevel: "Low", status: "Recommended", tenderId: "TND-001" },
   { id: 2, name: "MS Corporation", gstin: "05ABNTY3290P8ZC", complianceScore: 61, verificationDepth: 54, riskLevel: "Critical", status: "ClarificationRequired", tenderId: "TND-001" },
@@ -255,6 +263,13 @@ if (USE_MOCK) {
 
   if (path === "/tenders" && method === "GET") {
   return mockDelay(mockTenders)
+}
+if (path.match(/^\/bidders\/\d+\/debarment-check$/) && method === "GET") {
+  const bidderId = Number(path.split("/")[2])
+  const bidder = mockBidders.find((b) => b.id === bidderId)
+  if (!bidder) return mockDelay(null)
+  const match = checkDebarment(bidder.name, bidder.gstin)
+  return mockDelay(match ?? null)
 }
 if (path === "/notifications" && method === "GET") {
   return mockDelay(mockNotifications)
